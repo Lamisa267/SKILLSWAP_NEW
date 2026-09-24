@@ -1,0 +1,97 @@
+@model SkillSwap.Models.Skill
+
+@{
+    ViewData["Title"] = "Edit Skill";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4 p-md-5">
+
+                    <div class="text-center mb-4">
+                        <span class="badge bg-primary mb-3">
+                            Skill Management
+                        </span>
+
+                        <h2 class="fw-bold">Edit Skill</h2>
+
+                        <p class="text-muted">
+                            Update the information about this skill.
+                        </p>
+                    </div>
+
+                    <form asp-controller="Skills"
+                          asp-action="Edit"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="CreatedAt" />
+
+                        <div asp-validation-summary="ModelOnly"
+                             class="alert alert-danger"
+                             role="alert">
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Name"
+                                   class="form-label fw-semibold">
+                                Skill Name
+                            </label>
+
+                            <input asp-for="Name"
+                                   class="form-control"
+                                   placeholder="e.g. Python, Photoshop, Web Design" />
+
+                            <span asp-validation-for="Name"
+                                  class="text-danger">
+                            </span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Description"
+                                   class="form-label fw-semibold">
+                                Description
+                            </label>
+
+                            <textarea asp-for="Description"
+                                      class="form-control"
+                                      rows="5"
+                                      placeholder="Describe this skill..."></textarea>
+
+                            <span asp-validation-for="Description"
+                                  class="text-danger">
+                            </span>
+                        </div>
+
+                        <div class="d-flex gap-2">
+
+                            <button type="submit"
+                                    class="btn btn-primary flex-grow-1">
+                                Save Changes
+                            </button>
+
+                            <a asp-controller="Skills"
+                               asp-action="Index"
+                               class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

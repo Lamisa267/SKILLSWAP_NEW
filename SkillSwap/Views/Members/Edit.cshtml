@@ -1,0 +1,154 @@
+@model SkillSwap.Models.Member
+
+@{
+    ViewData["Title"] = "Edit Member";
+}
+
+<div class="container py-5">
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <div class="card border-0 shadow-sm rounded-4">
+
+                <div class="card-body p-4 p-md-5">
+
+                    <div class="text-center mb-4">
+                        <h1 class="fw-bold" style="color:#173f3b;">
+                            Edit Member
+                        </h1>
+
+                        <p class="text-muted">
+                            Update this member's SkillSwap profile.
+                        </p>
+                    </div>
+
+                    <form asp-controller="Members"
+                          asp-action="Edit"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden" asp-for="Id" />
+
+                        <div asp-validation-summary="ModelOnly"
+                             class="text-danger mb-3">
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Name"
+                                   class="form-label fw-semibold">
+                                Full Name
+                            </label>
+
+                            <input asp-for="Name"
+                                   class="form-control" />
+
+                            <span asp-validation-for="Name"
+                                  class="text-danger">
+                            </span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email"
+                                   class="form-label fw-semibold">
+                                Email Address
+                            </label>
+
+                            <input asp-for="Email"
+                                   class="form-control" />
+
+                            <span asp-validation-for="Email"
+                                  class="text-danger">
+                            </span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="PhoneNumber"
+                                   class="form-label fw-semibold">
+                                Phone Number
+                            </label>
+
+                            <input asp-for="PhoneNumber"
+                                   class="form-control" />
+
+                            <span asp-validation-for="PhoneNumber"
+                                  class="text-danger">
+                            </span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Bio"
+                                   class="form-label fw-semibold">
+                                Bio
+                            </label>
+
+                            <textarea asp-for="Bio"
+                                      class="form-control"
+                                      rows="4"></textarea>
+
+                            <span asp-validation-for="Bio"
+                                  class="text-danger">
+                            </span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="SkillToOffer"
+                                   class="form-label fw-semibold">
+                                Skill I Can Teach
+                            </label>
+
+                            <input asp-for="SkillToOffer"
+                                   class="form-control" />
+
+                            <span asp-validation-for="SkillToOffer"
+                                  class="text-danger">
+                            </span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="SkillToLearn"
+                                   class="form-label fw-semibold">
+                                Skill I Want To Learn
+                            </label>
+
+                            <input asp-for="SkillToLearn"
+                                   class="form-control" />
+
+                            <span asp-validation-for="SkillToLearn"
+                                  class="text-danger">
+                            </span>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-end">
+
+                            <a asp-controller="Members"
+                               asp-action="Index"
+                               class="btn btn-light px-4">
+                                Cancel
+                            </a>
+
+                            <button type="submit"
+                                    class="btn px-4"
+                                    style="background:#2b8a78;color:white;">
+                                Save Changes
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

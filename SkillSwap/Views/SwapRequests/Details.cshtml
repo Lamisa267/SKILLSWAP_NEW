@@ -1,0 +1,217 @@
+@model SkillSwap.Models.SwapRequest
+
+@{
+ViewData["Title"] = "Swap Request Details";
+}
+
+<div class="container py-5">
+
+<div class="row justify-content-center">
+
+    <div class="col-lg-8">
+
+        <div class="card border-0 shadow-sm rounded-4">
+
+            <div class="card-body p-4 p-md-5">
+
+                <div class="text-center mb-4">
+
+                    <div style="font-size:50px;">
+                        🔄
+                    </div>
+
+                    <div style="color:#2b8a78;font-size:12px;font-weight:700;letter-spacing:2px;">
+                        SKILLSWAP
+                    </div>
+
+                    <h1 class="fw-bold mt-2" style="color:#173f3b;">
+                        Swap Request
+                    </h1>
+
+                    @if (Model.Status == "Pending")
+                    {
+                        <span class="badge rounded-pill bg-warning text-dark px-3 py-2">
+                            Pending
+                        </span>
+                    }
+                    else if (Model.Status == "Accepted")
+                    {
+                        <span class="badge rounded-pill bg-success px-3 py-2">
+                            Accepted
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge rounded-pill bg-danger px-3 py-2">
+                            Rejected
+                        </span>
+                    }
+
+                </div>
+
+                <div class="row g-4 mb-4">
+
+                    <div class="col-md-6">
+
+                        <div class="p-4 rounded-3"
+                             style="background:#f7faf9;">
+
+                            <small class="text-muted">
+                                SENDER
+                            </small>
+
+                            <h5 class="fw-bold mt-2"
+                                style="color:#173f3b;">
+                                @Model.Sender.FullName
+                            </h5>
+
+                            <small class="text-muted">
+                                @Model.Sender.Email
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <div class="p-4 rounded-3"
+                             style="background:#f7faf9;">
+
+                            <small class="text-muted">
+                                RECEIVER
+                            </small>
+
+                            <h5 class="fw-bold mt-2"
+                                style="color:#173f3b;">
+                                @Model.Receiver.FullName
+                            </h5>
+
+                            <small class="text-muted">
+                                @Model.Receiver.Email
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="row g-4 mb-4">
+
+                    <div class="col-md-6">
+
+                        <div class="p-4 rounded-3 h-100"
+                             style="background:#eaf6f2;">
+
+                            <small class="text-muted">
+                                SKILL OFFERED
+                            </small>
+
+                            <h5 class="fw-bold mt-2"
+                                style="color:#173f3b;">
+                                @Model.OfferedSkill.Name
+                            </h5>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <div class="p-4 rounded-3 h-100"
+                             style="background:#f2eef9;">
+
+                            <small class="text-muted">
+                                SKILL REQUESTED
+                            </small>
+
+                            <h5 class="fw-bold mt-2"
+                                style="color:#173f3b;">
+                                @Model.RequestedSkill.Name
+                            </h5>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="p-4 rounded-3 mb-4"
+                     style="background:#f7faf9;">
+
+                    <small class="text-muted">
+                        MESSAGE
+                    </small>
+
+                    <p class="mt-2 mb-0">
+                        @(string.IsNullOrWhiteSpace(Model.Message)
+                            ? "No message provided."
+                            : Model.Message)
+                    </p>
+
+                </div>
+
+                <p class="text-center text-muted small">
+                    Created:
+                    @Model.CreatedAt.ToLocalTime().ToString("dd MMMM yyyy, hh:mm tt")
+                </p>
+
+                @if (Model.Status == "Pending")
+                {
+                    <div class="d-flex justify-content-center gap-2 mb-3">
+
+                        <form asp-action="Accept" method="post">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   name="id"
+                                   value="@Model.Id" />
+
+                            <button type="submit"
+                                    class="btn"
+                                    style="background:#2b8a78;color:white;">
+                                ✓ Accept
+                            </button>
+
+                        </form>
+
+                        <form asp-action="Reject" method="post">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   name="id"
+                                   value="@Model.Id" />
+
+                            <button type="submit"
+                                    class="btn"
+                                    style="background:#fde4e6;color:#a33a43;">
+                                ✕ Reject
+                            </button>
+
+                        </form>
+
+                    </div>
+                }
+
+                <div class="text-center">
+
+                    <a asp-action="Index"
+                       class="btn btn-light px-4">
+                        ← Back to Skill Exchange
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+</div>

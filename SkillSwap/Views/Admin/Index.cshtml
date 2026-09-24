@@ -1,0 +1,112 @@
+@{
+ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="container py-5">
+
+```
+<div class="mb-5">
+    <h1 class="fw-bold">Admin Dashboard</h1>
+    <p class="text-muted">
+        Welcome to the SkillSwap administration panel.
+    </p>
+</div>
+
+<div class="row g-4">
+
+    <!-- Manage Skills -->
+
+    <div class="col-md-4">
+
+        <div class="card border-0 shadow-sm h-100">
+
+            <div class="card-body p-4">
+
+                <h4 class="fw-bold mb-3">
+                    Skills
+                </h4>
+
+                <p class="text-muted">
+                    Add, view, edit and delete skills.
+                </p>
+
+                <a asp-controller="Skills"
+                   asp-action="Index"
+                   class="btn btn-success">
+
+                    Manage Skills
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Manage Members -->
+
+    <div class="col-md-4">
+
+        <div class="card border-0 shadow-sm h-100">
+
+            <div class="card-body p-4">
+
+                <h4 class="fw-bold mb-3">
+                    Members
+                </h4>
+
+                <p class="text-muted">
+                    Manage SkillSwap members and profiles.
+                </p>
+
+                <a asp-controller="Members"
+                   asp-action="Index"
+                   class="btn btn-success">
+
+                    Manage Members
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Swap Requests -->
+
+    <div class="col-md-4">
+
+        <div class="card border-0 shadow-sm h-100">
+
+            <div class="card-body p-4">
+
+                <h4 class="fw-bold mb-3">
+                    Skill Exchange
+                </h4>
+
+                <p class="text-muted">
+                    View and manage skill exchange requests.
+                </p>
+
+                <a asp-controller="SwapRequests"
+                   asp-action="Index"
+                   class="btn btn-success">
+
+                    Manage Requests
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+```
+
+</div>

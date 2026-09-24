@@ -1,0 +1,374 @@
+```cshtml
+@model IEnumerable<SkillSwap.Models.Member>
+
+@{
+    ViewData["Title"] = "Members";
+}
+
+<style>
+    .members-page {
+        background: #f7faf9;
+        min-height: 100vh;
+        padding: 50px 0 70px;
+    }
+
+    .members-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 40px;
+    }
+
+    .page-label {
+        color: #2b8a78;
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 8px;
+    }
+
+    .members-title {
+        color: #173f3b;
+        font-size: 40px;
+        font-weight: 700;
+        margin: 0 0 8px;
+    }
+
+    .members-subtitle {
+        color: #71817f;
+        font-size: 16px;
+        margin: 0;
+    }
+
+    .add-member-btn {
+        display: inline-block;
+        background: #2b8a78;
+        color: white;
+        padding: 13px 22px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 700;
+        transition: 0.2s;
+    }
+
+    .add-member-btn:hover {
+        background: #216c60;
+        color: white;
+        text-decoration: none;
+    }
+
+    .member-card {
+        background: white;
+        border: 1px solid #e5eeeb;
+        border-radius: 18px;
+        padding: 25px;
+        height: 100%;
+        box-shadow: 0 6px 20px rgba(30, 70, 65, 0.07);
+        transition: 0.25s;
+    }
+
+    .member-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 30px rgba(30, 70, 65, 0.13);
+    }
+
+    .member-avatar {
+        width: 65px;
+        height: 65px;
+        border-radius: 50%;
+        background: #e0f2ed;
+        color: #277a6c;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 25px;
+        font-weight: 700;
+        margin-bottom: 17px;
+    }
+
+    .member-name {
+        color: #173f3b;
+        font-size: 21px;
+        font-weight: 700;
+        margin-bottom: 7px;
+    }
+
+    .member-email {
+        color: #7a8886;
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    .member-phone {
+        color: #657471;
+        font-size: 14px;
+        margin-bottom: 17px;
+    }
+
+    .member-bio {
+        color: #5e6e6b;
+        font-size: 14px;
+        line-height: 1.6;
+        min-height: 45px;
+        margin-bottom: 22px;
+    }
+
+    .skill-section {
+        margin-bottom: 15px;
+    }
+
+    .skill-title {
+        color: #7b8987;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.7px;
+        margin-bottom: 7px;
+    }
+
+    .skill-badge {
+        display: inline-block;
+        padding: 7px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .teach-skill {
+        background: #e2f4ef;
+        color: #267568;
+    }
+
+    .learn-skill {
+        background: #eef0fa;
+        color: #58679d;
+    }
+
+    .member-actions {
+        display: flex;
+        gap: 8px;
+        border-top: 1px solid #edf1ef;
+        margin-top: 20px;
+        padding-top: 16px;
+    }
+
+    .action-btn {
+        flex: 1;
+        text-align: center;
+        padding: 9px 5px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 700;
+        transition: 0.2s;
+    }
+
+    .view-btn {
+        background: #edf7f5;
+        color: #28796c;
+    }
+
+    .view-btn:hover {
+        background: #dcefe9;
+        color: #1f665b;
+    }
+
+    .edit-btn {
+        background: #f0f1f9;
+        color: #59679b;
+    }
+
+    .edit-btn:hover {
+        background: #e1e3f2;
+        color: #4d5989;
+    }
+
+    .delete-btn {
+        background: #fff0f0;
+        color: #c35d5d;
+    }
+
+    .delete-btn:hover {
+        background: #ffe0e0;
+        color: #aa4b4b;
+    }
+
+    .empty-members {
+        background: white;
+        border: 1px solid #e5eeeb;
+        border-radius: 18px;
+        padding: 65px 25px;
+        text-align: center;
+        box-shadow: 0 6px 20px rgba(30, 70, 65, 0.07);
+    }
+
+    .empty-icon {
+        font-size: 45px;
+        margin-bottom: 15px;
+    }
+
+    .empty-members h3 {
+        color: #173f3b;
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .empty-members p {
+        color: #7a8886;
+        margin-bottom: 22px;
+    }
+</style>
+
+<div class="members-page">
+
+    <div class="container">
+
+        <div class="members-header">
+
+            <div>
+                <div class="page-label">
+                    SkillSwap Community
+                </div>
+
+                <h1 class="members-title">
+                    Our Members
+                </h1>
+
+                <p class="members-subtitle">
+                    Connect with people, share your skills and learn together.
+                </p>
+            </div>
+
+            <a asp-action="Create" class="add-member-btn">
+                + Add New Member
+            </a>
+
+        </div>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["SuccessMessage"]
+            </div>
+        }
+
+        @if (Model != null && Model.Any())
+        {
+            <div class="row g-4">
+
+                @foreach (var member in Model)
+                {
+                    <div class="col-lg-4 col-md-6">
+
+                        <div class="member-card">
+
+                            <div class="member-avatar">
+                                @member.Name.Substring(0, 1).ToUpper()
+                            </div>
+
+                            <div class="member-name">
+                                @member.Name
+                            </div>
+
+                            <div class="member-email">
+                                ✉ @member.Email
+                            </div>
+
+                            <div class="member-phone">
+                                ☎ @member.PhoneNumber
+                            </div>
+
+                            <div class="member-bio">
+                                @if (string.IsNullOrWhiteSpace(member.Bio))
+                                {
+                                    <span>No bio added yet.</span>
+                                }
+                                else
+                                {
+                                    @member.Bio
+                                }
+                            </div>
+
+                            <div class="skill-section">
+
+                                <div class="skill-title">
+                                    Skill I Can Teach
+                                </div>
+
+                                <span class="skill-badge teach-skill">
+                                    @member.SkillToOffer
+                                </span>
+
+                            </div>
+
+                            <div class="skill-section">
+
+                                <div class="skill-title">
+                                    Skill I Want To Learn
+                                </div>
+
+                                <span class="skill-badge learn-skill">
+                                    @member.SkillToLearn
+                                </span>
+
+                            </div>
+
+                            <div class="member-actions">
+
+                                <a asp-action="Details"
+                                   asp-route-id="@member.Id"
+                                   class="action-btn view-btn">
+                                    View
+                                </a>
+
+                                <a asp-action="Edit"
+                                   asp-route-id="@member.Id"
+                                   class="action-btn edit-btn">
+                                    Edit
+                                </a>
+
+                                <a asp-action="Delete"
+                                   asp-route-id="@member.Id"
+                                   class="action-btn delete-btn">
+                                    Delete
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                }
+
+            </div>
+        }
+        else
+        {
+            <div class="empty-members">
+
+                <div class="empty-icon">
+                    👥
+                </div>
+
+                <h3>
+                    No Members Yet
+                </h3>
+
+                <p>
+                    Start building the SkillSwap community by adding your first member.
+                </p>
+
+                <a asp-action="Create" class="add-member-btn">
+                    + Add First Member
+                </a>
+
+            </div>
+        }
+
+    </div>
+
+</div>
+```

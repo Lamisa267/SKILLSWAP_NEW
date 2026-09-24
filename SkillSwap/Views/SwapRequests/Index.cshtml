@@ -1,0 +1,364 @@
+@model IEnumerable<SkillSwap.Models.SwapRequest>
+
+@{
+ViewData["Title"] = "Skill Exchange";
+}
+
+<style>
+    .swap-page {
+        background: #f7faf9;
+        min-height: 85vh;
+        padding: 45px 0 70px;
+    }
+
+    .swap-title {
+        color: #173f3b;
+        font-size: 40px;
+        font-weight: 800;
+    }
+
+    .swap-subtitle {
+        color: #71817e;
+    }
+
+    .label-text {
+        color: #2b8a78;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+
+    .new-btn {
+        background: #2b8a78;
+        color: white;
+        border: 0;
+        border-radius: 10px;
+        padding: 12px 20px;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .new-btn:hover {
+        background: #236f62;
+        color: white;
+    }
+
+    .request-card {
+        background: white;
+        border: 1px solid #e4ece9;
+        border-radius: 18px;
+        padding: 24px;
+        height: 100%;
+        box-shadow: 0 7px 22px rgba(23,63,59,.06);
+    }
+
+    .request-id {
+        color: #94a19f;
+        font-size: 12px;
+    }
+
+    .member-name {
+        color: #173f3b;
+        font-size: 19px;
+        font-weight: 750;
+    }
+
+    .exchange-text {
+        color: #71817e;
+        font-size: 13px;
+    }
+
+    .status {
+        border-radius: 20px;
+        padding: 7px 12px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .accepted {
+        background: #d1e7dd;
+        color: #0f5132;
+    }
+
+    .rejected {
+        background: #f8d7da;
+        color: #842029;
+    }
+
+    .skill-box {
+        border-radius: 12px;
+        padding: 15px;
+        margin-top: 18px;
+        height: 100%;
+    }
+
+    .offer {
+        background: #eaf6f2;
+    }
+
+    .learn {
+        background: #f2eef9;
+    }
+
+    .skill-label {
+        color: #71817e;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .skill-name {
+        color: #173f3b;
+        font-weight: 750;
+        margin-top: 5px;
+    }
+
+    .message {
+        background: #f7faf9;
+        border-radius: 12px;
+        padding: 14px;
+        margin-top: 18px;
+        color: #52615e;
+        font-size: 14px;
+    }
+
+    .date {
+        color: #94a19f;
+        font-size: 12px;
+        margin-top: 15px;
+    }
+
+    .action-btn {
+        border: 0;
+        border-radius: 8px;
+        padding: 8px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .view {
+        background: #edf5f3;
+        color: #173f3b;
+    }
+
+    .accept {
+        background: #2b8a78;
+        color: white;
+    }
+
+    .reject {
+        background: #fde4e6;
+        color: #a33a43;
+    }
+</style>
+
+<div class="swap-page">
+
+```
+<div class="container">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <div class="label-text">
+                SkillSwap Community
+            </div>
+
+            <h1 class="swap-title mb-1">
+                Skill Exchange
+            </h1>
+
+            <p class="swap-subtitle mb-0">
+                Exchange knowledge and learn new skills.
+            </p>
+        </div>
+
+        <a asp-action="Create" class="new-btn">
+            + New Request
+        </a>
+
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success border-0 shadow-sm">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="text-center bg-white rounded-4 p-5 shadow-sm">
+
+            <div style="font-size:50px;">🔄</div>
+
+            <h4 class="fw-bold mt-3" style="color:#173f3b;">
+                No Swap Requests Yet
+            </h4>
+
+            <p class="text-muted">
+                Create your first skill exchange request.
+            </p>
+
+            <a asp-action="Create" class="new-btn">
+                Create Request
+            </a>
+
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+
+            @foreach (var request in Model)
+            {
+                <div class="col-lg-6">
+
+                    <div class="request-card">
+
+                        <div class="d-flex justify-content-between">
+
+                            <div>
+                                <div class="request-id">
+                                    REQUEST #@request.Id
+                                </div>
+
+                                <div class="member-name">
+                                    @request.Sender.FullName
+                                </div>
+
+                                <div class="exchange-text">
+                                    wants to exchange with
+                                    @request.Receiver.FullName
+                                </div>
+                            </div>
+
+                            @if (request.Status == "Pending")
+                            {
+                                <span class="status pending">Pending</span>
+                            }
+                            else if (request.Status == "Accepted")
+                            {
+                                <span class="status accepted">Accepted</span>
+                            }
+                            else
+                            {
+                                <span class="status rejected">Rejected</span>
+                            }
+
+                        </div>
+
+                        <div class="row g-3">
+
+                            <div class="col-6">
+
+                                <div class="skill-box offer">
+
+                                    <div class="skill-label">
+                                        Can Teach
+                                    </div>
+
+                                    <div class="skill-name">
+                                        @request.OfferedSkill.Name
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-6">
+
+                                <div class="skill-box learn">
+
+                                    <div class="skill-label">
+                                        Wants To Learn
+                                    </div>
+
+                                    <div class="skill-name">
+                                        @request.RequestedSkill.Name
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(request.Message))
+                        {
+                            <div class="message">
+                                <strong>Message</strong><br />
+                                @request.Message
+                            </div>
+                        }
+
+                        <div class="date">
+                            Created:
+                            @request.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt")
+                        </div>
+
+                        <div class="d-flex gap-2 mt-3">
+
+                            <a asp-action="Details"
+                               asp-route-id="@request.Id"
+                               class="action-btn view">
+                                View
+                            </a>
+
+                            @if (request.Status == "Pending")
+                            {
+                                <form asp-action="Accept"
+                                      method="post">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden"
+                                           name="id"
+                                           value="@request.Id" />
+
+                                    <button type="submit"
+                                            class="action-btn accept">
+                                        Accept
+                                    </button>
+
+                                </form>
+
+                                <form asp-action="Reject"
+                                      method="post">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden"
+                                           name="id"
+                                           value="@request.Id" />
+
+                                    <button type="submit"
+                                            class="action-btn reject">
+                                        Reject
+                                    </button>
+
+                                </form>
+                            }
+
+                        </div>
+
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
+
+</div>
+```
+
+</div>

@@ -1,0 +1,121 @@
+@model IEnumerable<SkillSwap.Models.Skill>
+
+@{
+    ViewData["Title"] = "Skills";
+}
+
+<div class="container py-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold mb-1">Skills</h1>
+            <p class="text-muted mb-0">
+                Explore skills available in the SkillSwap community.
+            </p>
+        </div>
+
+        <a asp-action="Create" class="btn btn-primary">
+            + Add Skill
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="row g-4">
+
+            @foreach (var skill in Model)
+            {
+                <div class="col-12 col-md-6 col-lg-4">
+
+                    <div class="card h-100 border-0 shadow-sm">
+
+                        <div class="card-body p-4">
+
+                            <span class="badge bg-primary mb-3">
+                                Skill
+                            </span>
+
+                            <h4 class="fw-bold">
+                                @skill.Name
+                            </h4>
+
+                            <p class="text-muted">
+                                @(string.IsNullOrWhiteSpace(skill.Description)
+                                    ? "No description provided."
+                                    : skill.Description)
+                            </p>
+
+                            <small class="text-muted">
+                                Added:
+                                @skill.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")
+                            </small>
+
+                        </div>
+
+                        <div class="card-footer bg-white border-0 p-4 pt-0">
+
+                            <div class="d-flex gap-2">
+
+                                <a asp-action="Details"
+                                   asp-route-id="@skill.Id"
+                                   class="btn btn-outline-primary btn-sm">
+                                    Details
+                                </a>
+
+                                <a asp-action="Edit"
+                                   asp-route-id="@skill.Id"
+                                   class="btn btn-outline-secondary btn-sm">
+                                    Edit
+                                </a>
+
+                                <a asp-action="Delete"
+                                   asp-route-id="@skill.Id"
+                                   class="btn btn-outline-danger btn-sm">
+                                    Delete
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body py-5">
+
+                    <h4 class="fw-bold">
+                        No skills available yet
+                    </h4>
+
+                    <p class="text-muted">
+                        Be the first person to add a skill!
+                    </p>
+
+                    <a asp-action="Create"
+                       class="btn btn-primary">
+                        Add Your First Skill
+                    </a>
+
+                </div>
+            </div>
+
+        </div>
+    }
+
+</div>
