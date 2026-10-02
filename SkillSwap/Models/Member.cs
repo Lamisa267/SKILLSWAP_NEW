@@ -6,6 +6,10 @@ namespace SkillSwap.Models
     {
         public int Id { get; set; }
 
+    public int? UserId { get; set; }
+
+        public User? User { get; set; }
+
         [Required]
         [Display(Name = "Full Name")]
         public string Name { get; set; } = string.Empty;
@@ -31,6 +35,7 @@ namespace SkillSwap.Models
         public string SkillToLearn { get; set; } = string.Empty;
 
         [Display(Name = "Joined Date")]
-        public DateTime JoinedDate { get; set; } = DateTime.Now;
+        public DateTime JoinedDate { get; set; } = DateTime.UtcNow;
     }
+
 }

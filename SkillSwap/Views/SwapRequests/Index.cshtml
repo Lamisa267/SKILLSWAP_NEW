@@ -1,364 +1,772 @@
 @model IEnumerable<SkillSwap.Models.SwapRequest>
 
 @{
-ViewData["Title"] = "Skill Exchange";
+    ViewData["Title"] = "Skill Exchange";
+
+    int.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var currentUserId);
+
+    var requests = Model?.ToList() ?? new List<SkillSwap.Models.SwapRequest>();
+    var tones = new[] { "violet", "amber", "pink" };
+
+    string StatusKey(string? s) => s == "Pending" ? "pending" : s == "Accepted" ? "accepted" : "rejected";
+    string StatusLabel(string? s) => s == "Pending" ? "Pending" : s == "Accepted" ? "Accepted" : "Rejected";
+
+    var total = requests.Count;
+    var receivedCount = requests.Count(r => r.ReceiverId == currentUserId);
+    var sentCount = total - receivedCount;
+    var pendingCount = requests.Count(r => r.Status == "Pending");
+    var acceptedCount = requests.Count(r => r.Status == "Accepted");
+    var rejectedCount = total - pendingCount - acceptedCount;
+    var awaitingCount = requests.Count(r => r.ReceiverId == currentUserId && r.Status == "Pending");
 }
 
 <style>
-    .swap-page {
-        background: #f7faf9;
-        min-height: 85vh;
-        padding: 45px 0 70px;
+    .sx { background: var(--ss-bg); }
+
+    .sx-ico { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* ================= PAGE HEADER ================= */
+    .sx-head {
+        background: #fff;
+        border-bottom: 1px solid var(--ss-border);
+        padding: 30px 0 28px;
     }
 
-    .swap-title {
-        color: #173f3b;
-        font-size: 40px;
+    .sx-crumb {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--ss-muted);
+        margin-bottom: 14px;
+    }
+
+    .sx-crumb a { color: var(--ss-muted); font-weight: 600; }
+    .sx-crumb a:hover { color: var(--ss-primary); }
+    .sx-crumb strong { color: var(--ss-ink); font-weight: 700; }
+
+    .sx-title {
+        font-size: clamp(28px, 3.4vw, 36px);
+        font-weight: 800;
+        letter-spacing: -0.8px;
+        margin: 0 0 6px;
+    }
+
+    .sx-sub {
+        color: var(--ss-text);
+        font-size: 15px;
+        line-height: 1.65;
+        margin: 0;
+        max-width: 560px;
+    }
+
+    .sx-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 22px;
+        margin-top: 16px;
+        font-size: 13px;
+        color: var(--ss-text);
+    }
+
+    .sx-stats b { color: var(--ss-ink); font-weight: 800; margin-right: 4px; }
+
+    .sx-find {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--ss-primary);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 700;
+        padding: 11px 20px;
+        border-radius: 10px;
+        transition: background-color .2s ease;
+        white-space: nowrap;
+    }
+
+    .sx-find:hover { background: var(--ss-primary-dark); color: #fff; }
+
+    .sx-body { padding: 28px 12px 80px; }
+
+    /* ================= ALERTS ================= */
+    .sx-alert {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 18px;
+    }
+
+    .sx-alert.ok { background: #e3f8ea; border: 1px solid #bfe9cd; color: #15803d; }
+    .sx-alert.err { background: #fdecec; border: 1px solid #f5c2c2; color: #b42c2c; }
+    .sx-alert.wait { background: var(--ss-accent-soft); border: 1px solid #f6dd9a; color: #8a5a00; }
+
+    /* ================= FILTER BAR ================= */
+    .sx-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+    }
+
+    .sx-tabs {
+        display: inline-flex;
+        gap: 4px;
+        background: #fff;
+        border: 1px solid var(--ss-border);
+        border-radius: 12px;
+        padding: 4px;
+    }
+
+    .sx-tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 0;
+        background: transparent;
+        color: var(--ss-text);
+        font-size: 14px;
+        font-weight: 700;
+        padding: 8px 16px;
+        border-radius: 9px;
+        cursor: pointer;
+        transition: background-color .15s ease, color .15s ease;
+    }
+
+    .sx-tab:hover { background: var(--ss-bg); color: var(--ss-ink); }
+
+    .sx-tab.active { background: var(--ss-primary); color: #fff; }
+
+    .sx-tab .n {
+        font-size: 12px;
+        font-weight: 800;
+        background: var(--ss-bg);
+        color: var(--ss-muted);
+        border-radius: 20px;
+        padding: 1px 8px;
+    }
+
+    .sx-tab.active .n { background: rgba(255, 255, 255, .22); color: #fff; }
+
+    .sx-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .sx-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid var(--ss-border);
+        background: #fff;
+        color: var(--ss-text);
+        font-size: 13px;
+        font-weight: 700;
+        border-radius: 30px;
+        padding: 6px 14px;
+        cursor: pointer;
+        transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+    }
+
+    .sx-pill:hover { background: var(--ss-primary-soft); border-color: #cfc8f8; color: var(--ss-primary); }
+
+    .sx-pill.active { background: var(--ss-primary-soft); border-color: var(--ss-primary); color: var(--ss-primary); }
+
+    .sx-pill .n { font-size: 12px; font-weight: 800; color: var(--ss-muted); }
+    .sx-pill.active .n { color: var(--ss-primary); }
+
+    .sx-info { font-size: 14px; color: var(--ss-text); margin: 14px 2px 18px; }
+    .sx-info b { color: var(--ss-ink); font-weight: 800; }
+
+    /* ================= REQUEST CARD ================= */
+    .sc {
+        position: relative;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        border: 1px solid var(--ss-border);
+        border-radius: 16px;
+        padding: 22px;
+        transition: border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .sc:hover { border-color: #cfc8f8; box-shadow: 0 10px 30px rgba(29, 27, 58, .08); }
+
+    .sc.needs-action { border-left: 4px solid var(--ss-accent); }
+
+    .sc-top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .sc-avatar {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
         font-weight: 800;
     }
 
-    .swap-subtitle {
-        color: #71817e;
-    }
+    .sc-avatar.violet { background: var(--ss-primary-soft); color: var(--ss-primary); }
+    .sc-avatar.amber  { background: var(--ss-accent-soft);  color: #a86a00; }
+    .sc-avatar.pink   { background: #ffe9f1;                color: #d6336c; }
 
-    .label-text {
-        color: #2b8a78;
+    .sc-who { min-width: 0; flex: 1; }
+
+    .sc-dir {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
         font-size: 12px;
         font-weight: 700;
-        letter-spacing: 2px;
-        text-transform: uppercase;
+        color: var(--ss-muted);
+        margin-bottom: 2px;
     }
 
-    .new-btn {
-        background: #2b8a78;
-        color: white;
-        border: 0;
-        border-radius: 10px;
-        padding: 12px 20px;
-        text-decoration: none;
-        font-weight: 600;
+    .sc-dir svg { width: 13px; height: 13px; }
+    .sc-dir.in { color: var(--ss-primary); }
+    .sc-dir.out { color: #8a5a00; }
+
+    .sc-name {
+        font-size: 16px;
+        font-weight: 800;
+        line-height: 1.3;
+        margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
-    .new-btn:hover {
-        background: #236f62;
-        color: white;
-    }
-
-    .request-card {
-        background: white;
-        border: 1px solid #e4ece9;
-        border-radius: 18px;
-        padding: 24px;
-        height: 100%;
-        box-shadow: 0 7px 22px rgba(23,63,59,.06);
-    }
-
-    .request-id {
-        color: #94a19f;
+    .sc-mail {
         font-size: 12px;
+        color: var(--ss-muted);
+        margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
-    .member-name {
-        color: #173f3b;
-        font-size: 19px;
-        font-weight: 750;
-    }
-
-    .exchange-text {
-        color: #71817e;
-        font-size: 13px;
-    }
-
-    .status {
-        border-radius: 20px;
-        padding: 7px 12px;
+    .sc-badge {
+        flex-shrink: 0;
+        align-self: flex-start;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 30px;
+        padding: 5px 11px;
         font-size: 12px;
-        font-weight: 700;
+        font-weight: 800;
     }
 
-    .pending {
-        background: #fff3cd;
-        color: #856404;
+    .sc-badge i {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
     }
 
-    .accepted {
-        background: #d1e7dd;
-        color: #0f5132;
-    }
+    .sc-badge.pending { background: var(--ss-accent-soft); color: #8a5a00; }
+    .sc-badge.accepted { background: #e3f8ea; color: #15803d; }
+    .sc-badge.rejected { background: #fdecec; color: #b42c2c; }
 
-    .rejected {
-        background: #f8d7da;
-        color: #842029;
-    }
-
-    .skill-box {
+    /* Offering ⇄ Wants to learn */
+    .sc-swap {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 10px;
+        align-items: stretch;
+        border: 1px solid var(--ss-border);
+        background: var(--ss-bg);
         border-radius: 12px;
-        padding: 15px;
-        margin-top: 18px;
-        height: 100%;
+        padding: 12px;
+        margin-bottom: 14px;
     }
 
-    .offer {
-        background: #eaf6f2;
-    }
+    .sc-side { min-width: 0; }
 
-    .learn {
-        background: #f2eef9;
-    }
-
-    .skill-label {
-        color: #71817e;
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-    }
-
-    .skill-name {
-        color: #173f3b;
-        font-weight: 750;
-        margin-top: 5px;
-    }
-
-    .message {
-        background: #f7faf9;
-        border-radius: 12px;
-        padding: 14px;
-        margin-top: 18px;
-        color: #52615e;
-        font-size: 14px;
-    }
-
-    .date {
-        color: #94a19f;
+    .sc-label {
+        display: block;
         font-size: 12px;
-        margin-top: 15px;
+        font-weight: 700;
+        color: var(--ss-muted);
+        margin-bottom: 6px;
     }
 
-    .action-btn {
-        border: 0;
+    .sc-skill {
+        display: block;
         border-radius: 8px;
-        padding: 8px 14px;
-        font-size: 13px;
+        padding: 8px 12px;
+        font-size: 14px;
+        font-weight: 800;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .sc-skill.offer { background: var(--ss-primary-soft); color: var(--ss-primary-dark); }
+    .sc-skill.learn { background: var(--ss-accent-soft); color: #8a5a00; }
+
+    .sc-arrow {
+        align-self: end;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #fff;
+        border: 1px solid var(--ss-border);
+        color: var(--ss-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .sc-arrow svg { width: 15px; height: 15px; }
+
+    .sc-msg {
+        border-left: 3px solid var(--ss-primary-soft);
+        padding: 2px 0 2px 14px;
+        margin-bottom: 14px;
+    }
+
+    .sc-msg small { display: block; font-size: 12px; font-weight: 700; color: var(--ss-muted); margin-bottom: 3px; }
+
+    .sc-msg p {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.65;
+        color: var(--ss-text);
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .sc-foot {
+        margin-top: auto;
+        padding-top: 14px;
+        border-top: 1px solid var(--ss-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .sc-date {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
         font-weight: 600;
-        text-decoration: none;
+        color: var(--ss-muted);
+    }
+
+    .sc-date svg { width: 14px; height: 14px; }
+
+    .sc-actions { display: flex; gap: 8px; }
+
+    .sc-actions form { margin: 0; }
+
+    .sc-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        border-radius: 9px;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 8px 16px;
         cursor: pointer;
+        transition: background-color .2s ease, color .2s ease, border-color .2s ease;
     }
 
-    .view {
-        background: #edf5f3;
-        color: #173f3b;
+    .sc-btn svg { width: 14px; height: 14px; }
+
+    .sc-btn.accept { background: var(--ss-primary); border: 1px solid var(--ss-primary); color: #fff; }
+    .sc-btn.accept:hover { background: var(--ss-primary-dark); border-color: var(--ss-primary-dark); }
+
+    .sc-btn.reject { background: #fff; border: 1px solid #f0c4c4; color: #c0392b; }
+    .sc-btn.reject:hover { background: #fdecec; border-color: #e6a3a3; }
+
+    .sc-await {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #8a5a00;
     }
 
-    .accept {
-        background: #2b8a78;
-        color: white;
+    .sc-await svg { width: 14px; height: 14px; }
+
+    /* ================= EMPTY STATES ================= */
+    .sx-none, .sx-empty {
+        background: #fff;
+        border: 1px dashed #cfc8f8;
+        border-radius: 16px;
+        text-align: center;
+        padding: 56px 24px;
     }
 
-    .reject {
-        background: #fde4e6;
-        color: #a33a43;
+    .sx-none { display: none; margin-top: 8px; }
+
+    .sx-empty-ico {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--ss-primary-soft);
+        color: var(--ss-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+    }
+
+    .sx-empty-ico svg { width: 26px; height: 26px; }
+
+    .sx-none h3, .sx-empty h2 { font-size: 20px; font-weight: 800; margin: 0 0 6px; }
+    .sx-none p, .sx-empty p { color: var(--ss-text); font-size: 14px; margin: 0 auto 18px; max-width: 440px; line-height: 1.65; }
+
+    .sx-none button {
+        background: #fff;
+        border: 1px solid var(--ss-border);
+        color: var(--ss-primary);
+        font-size: 13px;
+        font-weight: 700;
+        border-radius: 10px;
+        padding: 9px 18px;
+    }
+
+    .sx-none button:hover { background: var(--ss-primary-soft); }
+
+    @@media (max-width: 767px) {
+        .sx-head { padding: 24px 0; }
+        .sx-find { width: 100%; justify-content: center; }
+        .sx-tabs { width: 100%; }
+        .sx-tab { flex: 1; justify-content: center; padding: 8px 6px; }
+        .sc-swap { grid-template-columns: 1fr; }
+        .sc-arrow { justify-self: center; transform: rotate(90deg); }
+        .sc-actions, .sc-actions form { flex: 1; }
+        .sc-actions .sc-btn { width: 100%; }
+    }
+
+    @@media (prefers-reduced-motion: reduce) {
+        .sc, .sc-btn, .sx-tab, .sx-pill { transition: none; }
     }
 </style>
 
-<div class="swap-page">
+<div class="sx">
 
-```
-<div class="container">
+    <!-- PAGE HEADER -->
+    <section class="sx-head">
+        <div class="container">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+            <nav class="sx-crumb" aria-label="Breadcrumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <span>/</span>
+                <strong>Skill Exchange</strong>
+            </nav>
 
-        <div>
-            <div class="label-text">
-                SkillSwap Community
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3">
+                <div>
+                    <h1 class="sx-title">Skill Exchange</h1>
+                    <p class="sx-sub">Manage your sent and received skill exchange requests.</p>
+
+                    @if (total > 0)
+                    {
+                        <div class="sx-stats">
+                            <span><b>@total</b>requests</span>
+                            <span><b>@receivedCount</b>received</span>
+                            <span><b>@sentCount</b>sent</span>
+                            <span><b>@pendingCount</b>pending</span>
+                        </div>
+                    }
+                </div>
+
+                <a asp-controller="Members" asp-action="Index" class="sx-find">
+                    <svg class="sx-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+                    Find members
+                </a>
             </div>
 
-            <h1 class="swap-title mb-1">
-                Skill Exchange
-            </h1>
-
-            <p class="swap-subtitle mb-0">
-                Exchange knowledge and learn new skills.
-            </p>
         </div>
+    </section>
 
-        <a asp-action="Create" class="new-btn">
-            + New Request
-        </a>
+    <div class="container sx-body">
 
-    </div>
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="sx-alert ok" role="status">
+                <svg class="sx-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10" /></svg>
+                <span>@TempData["SuccessMessage"]</span>
+            </div>
+        }
 
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success border-0 shadow-sm">
-            @TempData["SuccessMessage"]
-        </div>
-    }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="sx-alert err" role="alert">
+                <svg class="sx-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16.5v.01" /></svg>
+                <span>@TempData["ErrorMessage"]</span>
+            </div>
+        }
 
-    @if (!Model.Any())
-    {
-        <div class="text-center bg-white rounded-4 p-5 shadow-sm">
-
-            <div style="font-size:50px;">🔄</div>
-
-            <h4 class="fw-bold mt-3" style="color:#173f3b;">
-                No Swap Requests Yet
-            </h4>
-
-            <p class="text-muted">
-                Create your first skill exchange request.
-            </p>
-
-            <a asp-action="Create" class="new-btn">
-                Create Request
-            </a>
-
-        </div>
-    }
-    else
-    {
-        <div class="row g-4">
-
-            @foreach (var request in Model)
+        @if (!requests.Any())
+        {
+            <div class="sx-empty">
+                <div class="sx-empty-ico">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h12l-3-3M17 17H5l3 3" /></svg>
+                </div>
+                <h2>No Skill Exchange Requests Yet</h2>
+                <p>Visit a member's profile and send a skill exchange request.</p>
+                <a asp-controller="Members" asp-action="Index" class="sx-find">Explore Members</a>
+            </div>
+        }
+        else
+        {
+            @if (awaitingCount > 0)
             {
-                <div class="col-lg-6">
-
-                    <div class="request-card">
-
-                        <div class="d-flex justify-content-between">
-
-                            <div>
-                                <div class="request-id">
-                                    REQUEST #@request.Id
-                                </div>
-
-                                <div class="member-name">
-                                    @request.Sender.FullName
-                                </div>
-
-                                <div class="exchange-text">
-                                    wants to exchange with
-                                    @request.Receiver.FullName
-                                </div>
-                            </div>
-
-                            @if (request.Status == "Pending")
-                            {
-                                <span class="status pending">Pending</span>
-                            }
-                            else if (request.Status == "Accepted")
-                            {
-                                <span class="status accepted">Accepted</span>
-                            }
-                            else
-                            {
-                                <span class="status rejected">Rejected</span>
-                            }
-
-                        </div>
-
-                        <div class="row g-3">
-
-                            <div class="col-6">
-
-                                <div class="skill-box offer">
-
-                                    <div class="skill-label">
-                                        Can Teach
-                                    </div>
-
-                                    <div class="skill-name">
-                                        @request.OfferedSkill.Name
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-6">
-
-                                <div class="skill-box learn">
-
-                                    <div class="skill-label">
-                                        Wants To Learn
-                                    </div>
-
-                                    <div class="skill-name">
-                                        @request.RequestedSkill.Name
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        @if (!string.IsNullOrWhiteSpace(request.Message))
-                        {
-                            <div class="message">
-                                <strong>Message</strong><br />
-                                @request.Message
-                            </div>
-                        }
-
-                        <div class="date">
-                            Created:
-                            @request.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt")
-                        </div>
-
-                        <div class="d-flex gap-2 mt-3">
-
-                            <a asp-action="Details"
-                               asp-route-id="@request.Id"
-                               class="action-btn view">
-                                View
-                            </a>
-
-                            @if (request.Status == "Pending")
-                            {
-                                <form asp-action="Accept"
-                                      method="post">
-
-                                    @Html.AntiForgeryToken()
-
-                                    <input type="hidden"
-                                           name="id"
-                                           value="@request.Id" />
-
-                                    <button type="submit"
-                                            class="action-btn accept">
-                                        Accept
-                                    </button>
-
-                                </form>
-
-                                <form asp-action="Reject"
-                                      method="post">
-
-                                    @Html.AntiForgeryToken()
-
-                                    <input type="hidden"
-                                           name="id"
-                                           value="@request.Id" />
-
-                                    <button type="submit"
-                                            class="action-btn reject">
-                                        Reject
-                                    </button>
-
-                                </form>
-                            }
-
-                        </div>
-
-                    </div>
-
+                <div class="sx-alert wait" role="status">
+                    <svg class="sx-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+                    <span>
+                        @awaitingCount @(awaitingCount == 1 ? "request is" : "requests are") waiting for your response.
+                    </span>
                 </div>
             }
 
-        </div>
-    }
+            <!-- FILTER BAR -->
+            <div class="sx-bar">
 
-</div>
-```
+                <div class="sx-tabs" role="tablist" aria-label="Request direction">
+                    <button type="button" class="sx-tab active" data-dir="all">All <span class="n">@total</span></button>
+                    <button type="button" class="sx-tab" data-dir="received">Received <span class="n">@receivedCount</span></button>
+                    <button type="button" class="sx-tab" data-dir="sent">Sent <span class="n">@sentCount</span></button>
+                </div>
 
+                <div class="sx-pills" aria-label="Request status">
+                    <button type="button" class="sx-pill active" data-status="all">All status</button>
+                    <button type="button" class="sx-pill" data-status="pending">Pending <span class="n">@pendingCount</span></button>
+                    <button type="button" class="sx-pill" data-status="accepted">Accepted <span class="n">@acceptedCount</span></button>
+                    <button type="button" class="sx-pill" data-status="rejected">Rejected <span class="n">@rejectedCount</span></button>
+                </div>
+
+            </div>
+
+            <p class="sx-info" id="sxInfo">Showing <b>@total</b> of @total requests</p>
+
+            <!-- REQUESTS -->
+            <div class="row g-3" id="sxGrid">
+
+                @for (var i = 0; i < requests.Count; i++)
+                {
+                    var request = requests[i];
+                    bool isReceiver = request.ReceiverId == currentUserId;
+                    var tone = tones[i % tones.Length];
+                    var statusKey = StatusKey(request.Status);
+                    var awaiting = isReceiver && request.Status == "Pending";
+
+                    var otherName = isReceiver ? request.Sender?.FullName : request.Receiver?.FullName;
+                    var otherEmail = isReceiver ? request.Sender?.Email : request.Receiver?.Email;
+                    var initial = string.IsNullOrWhiteSpace(otherName) ? "?" : otherName.Trim().Substring(0, 1).ToUpper();
+
+                    <div class="col-lg-6 sx-item"
+                         data-dir="@(isReceiver ? "received" : "sent")"
+                         data-status="@statusKey">
+
+                        <article class="sc @(awaiting ? "needs-action" : "")">
+
+                            <div class="sc-top">
+
+                                <div class="sc-avatar @tone">@initial</div>
+
+                                <div class="sc-who">
+                                    @if (isReceiver)
+                                    {
+                                        <span class="sc-dir in">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12m0 0-4-4m4 4 4-4M5 20h14" /></svg>
+                                            Received from
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="sc-dir out">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12 20 4l-4 16-4-6z" /></svg>
+                                            Sent to
+                                        </span>
+                                    }
+
+                                    <h3 class="sc-name">@otherName</h3>
+                                    <p class="sc-mail">@otherEmail</p>
+                                </div>
+
+                                <span class="sc-badge @statusKey"><i></i>@StatusLabel(request.Status)</span>
+
+                            </div>
+
+                            <div class="sc-swap">
+
+                                <div class="sc-side">
+                                    <span class="sc-label">Offering</span>
+                                    <span class="sc-skill offer" title="@request.OfferedSkill?.Name">@request.OfferedSkill?.Name</span>
+                                </div>
+
+                                <div class="sc-arrow" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h12l-3-3M17 17H5l3 3" /></svg>
+                                </div>
+
+                                <div class="sc-side">
+                                    <span class="sc-label">Wants to learn</span>
+                                    <span class="sc-skill learn" title="@request.RequestedSkill?.Name">@request.RequestedSkill?.Name</span>
+                                </div>
+
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(request.Message))
+                            {
+                                <div class="sc-msg">
+                                    <small>Message</small>
+                                    <p>@request.Message</p>
+                                </div>
+                            }
+
+                            <div class="sc-foot">
+
+                                <span class="sc-date">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+                                    @request.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt")
+                                </span>
+
+                                @if (awaiting)
+                                {
+                                    <div class="sc-actions">
+
+                                        <form asp-action="Accept" method="post">
+                                            <input type="hidden" name="id" value="@request.Id" />
+                                            <button type="submit" class="sc-btn accept">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10" /></svg>
+                                                Accept
+                                            </button>
+                                        </form>
+
+                                        <form asp-action="Reject" method="post" data-confirm="Reject this skill exchange request?">
+                                            <input type="hidden" name="id" value="@request.Id" />
+                                            <button type="submit" class="sc-btn reject">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
+                                                Reject
+                                            </button>
+                                        </form>
+
+                                    </div>
+                                }
+                                else if (!isReceiver && request.Status == "Pending")
+                                {
+                                    <span class="sc-await">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+                                        Waiting for reply
+                                    </span>
+                                }
+
+                            </div>
+
+                        </article>
+
+                    </div>
+                }
+
+            </div>
+
+            <!-- NO RESULTS -->
+            <div class="sx-none" id="sxNone">
+                <div class="sx-empty-ico">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+                </div>
+                <h3>No matching requests</h3>
+                <p>There are no requests for this filter. Try another tab or status.</p>
+                <button type="button" id="sxReset">Show all requests</button>
+            </div>
+        }
+
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            var grid = document.getElementById("sxGrid");
+            if (!grid) return;
+
+            var items = Array.prototype.slice.call(grid.querySelectorAll(".sx-item"));
+            var total = items.length;
+            var tabs = document.querySelectorAll(".sx-tab");
+            var pills = document.querySelectorAll(".sx-pill");
+            var info = document.getElementById("sxInfo");
+            var none = document.getElementById("sxNone");
+            var reset = document.getElementById("sxReset");
+
+            var state = { dir: "all", status: "all" };
+
+            function apply() {
+                var visible = 0;
+
+                items.forEach(function (item) {
+                    var ok =
+                        (state.dir === "all" || item.dataset.dir === state.dir) &&
+                        (state.status === "all" || item.dataset.status === state.status);
+
+                    item.style.display = ok ? "" : "none";
+                    if (ok) visible++;
+                });
+
+                info.innerHTML = "Showing <b>" + visible + "</b> of " + total + " requests";
+                none.style.display = visible === 0 ? "block" : "none";
+            }
+
+            function mark(list, attr, value) {
+                list.forEach(function (el) {
+                    el.classList.toggle("active", el.dataset[attr] === value);
+                });
+            }
+
+            tabs.forEach(function (tab) {
+                tab.addEventListener("click", function () {
+                    state.dir = tab.dataset.dir;
+                    mark(tabs, "dir", state.dir);
+                    apply();
+                });
+            });
+
+            pills.forEach(function (pill) {
+                pill.addEventListener("click", function () {
+                    state.status = pill.dataset.status;
+                    mark(pills, "status", state.status);
+                    apply();
+                });
+            });
+
+            if (reset) {
+                reset.addEventListener("click", function () {
+                    state.dir = "all";
+                    state.status = "all";
+                    mark(tabs, "dir", "all");
+                    mark(pills, "status", "all");
+                    apply();
+                });
+            }
+
+            document.querySelectorAll("form[data-confirm]").forEach(function (form) {
+                form.addEventListener("submit", function (e) {
+                    if (!window.confirm(form.dataset.confirm)) e.preventDefault();
+                });
+            });
+        });
+    </script>
+}

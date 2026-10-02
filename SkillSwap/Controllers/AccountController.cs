@@ -12,8 +12,7 @@ namespace SkillSwap.Controllers
     {
         private readonly SkillSwapDbContext _context;
 
-
-    public AccountController(SkillSwapDbContext context)
+        public AccountController(SkillSwapDbContext context)
         {
             _context = context;
         }
@@ -40,9 +39,12 @@ namespace SkillSwap.Controllers
             }
 
             var email = model.Email.Trim().ToLower();
+            var fullName = model.FullName.Trim();
 
+            // Check existing User
             var existingUser = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email.ToLower() == email);
+                .FirstOrDefaultAsync(u =>
+                    u.Email.ToLower() == email);
 
             if (existingUser != null)
             {
@@ -54,12 +56,15 @@ namespace SkillSwap.Controllers
                 return View(model);
             }
 
+            // =========================
+            // CREATE USER
+            // =========================
+
             var user = new User
             {
-                FullName = model.FullName.Trim(),
+                FullName = fullName,
                 Email = email,
 
-                // Password is stored as a BCrypt hash
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(
                     model.Password
                 ),
@@ -72,8 +77,50 @@ namespace SkillSwap.Controllers
 
             await _context.SaveChangesAsync();
 
+            // =========================
+            // CREATE / CONNECT MEMBER
+            // =========================
+
+            var existingMember = await _context.Members
+                .FirstOrDefaultAsync(m =>
+                    m.Email.ToLower() == email);
+
+            if (existingMember != null)
+            {
+                // Existing Member → connect User
+                existingMember.UserId = user.Id;
+
+                // Update name if needed
+                existingMember.Name = fullName;
+            }
+            else
+            {
+                // New User → automatically create Member
+                var member = new Member
+                {
+                    UserId = user.Id,
+
+                    Name = fullName,
+                    Email = email,
+
+                    PhoneNumber = "Not provided",
+
+                    Bio = "New SkillSwap member.",
+
+                    SkillToOffer = "Not specified",
+
+                    SkillToLearn = "Not specified",
+
+                    JoinedDate = DateTime.UtcNow
+                };
+
+                _context.Members.Add(member);
+            }
+
+            await _context.SaveChangesAsync();
+
             TempData["SuccessMessage"] =
-                "Account created successfully! Please login.";
+                "Account and Member profile created successfully! Please login.";
 
             return RedirectToAction(nameof(Login));
         }
@@ -146,7 +193,7 @@ namespace SkillSwap.Controllers
             }
 
             // =========================
-            // CUSTOM SESSION
+            // SESSION
             // =========================
 
             HttpContext.Session.SetInt32(
@@ -169,27 +216,27 @@ namespace SkillSwap.Controllers
             // =========================
 
             var claims = new List<Claim>
-        {
-            new Claim(
-                ClaimTypes.NameIdentifier,
-                user.Id.ToString()
-            ),
+            {
+                new Claim(
+                    ClaimTypes.NameIdentifier,
+                    user.Id.ToString()
+                ),
 
-            new Claim(
-                ClaimTypes.Name,
-                user.FullName
-            ),
+                new Claim(
+                    ClaimTypes.Name,
+                    user.FullName
+                ),
 
-            new Claim(
-                ClaimTypes.Email,
-                user.Email
-            ),
+                new Claim(
+                    ClaimTypes.Email,
+                    user.Email
+                ),
 
-            new Claim(
-                ClaimTypes.Role,
-                user.Role
-            )
-        };
+                new Claim(
+                    ClaimTypes.Role,
+                    user.Role
+                )
+            };
 
             var identity = new ClaimsIdentity(
                 claims,
@@ -237,5 +284,4 @@ namespace SkillSwap.Controllers
             return View();
         }
     }
-
 }

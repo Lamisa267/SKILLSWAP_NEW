@@ -2,120 +2,367 @@
 
 @{
     ViewData["Title"] = "Skills";
+    var skills = Model?.ToList() ?? new List<SkillSwap.Models.Skill>();
+    var tones = new[] { "violet", "amber", "pink" };
 }
 
-<div class="container py-5">
+<style>
+    .sk-header {
+        background: linear-gradient(135deg, #f1efff 0%, #faf9ff 55%, #fffaf0 100%);
+        border-bottom: 1px solid var(--ss-border);
+        padding: 54px 0 46px;
+    }
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="fw-bold mb-1">Skills</h1>
-            <p class="text-muted mb-0">
-                Explore skills available in the SkillSwap community.
-            </p>
+    .sk-title {
+        font-size: clamp(30px, 4vw, 40px);
+        font-weight: 800;
+        letter-spacing: -1px;
+        margin: 0 0 8px;
+    }
+
+    .sk-subtitle {
+        color: var(--ss-text);
+        margin: 0;
+        font-size: 15px;
+        max-width: 520px;
+        line-height: 1.7;
+    }
+
+    .sk-count {
+        display: inline-block;
+        background: #fff;
+        border: 1px solid #dcd7fb;
+        color: var(--ss-primary);
+        border-radius: 30px;
+        padding: 5px 13px;
+        font-size: 12px;
+        font-weight: 800;
+        margin-bottom: 14px;
+    }
+
+    .sk-add-btn {
+        background: var(--ss-accent);
+        color: var(--ss-ink);
+        border: none;
+        font-weight: 800;
+        padding: 12px 22px;
+        border-radius: 12px;
+        box-shadow: 0 10px 22px rgba(255, 182, 39, .35);
+        transition: background-color .2s ease, transform .2s ease;
+    }
+
+    .sk-add-btn:hover {
+        background: var(--ss-accent-dark);
+        color: var(--ss-ink);
+        transform: translateY(-2px);
+    }
+
+    /* Search */
+    .sk-search-wrap {
+        position: relative;
+        max-width: 420px;
+        margin: -26px 0 34px;
+    }
+
+    .sk-search-wrap input {
+        width: 100%;
+        height: 54px;
+        padding: 0 18px 0 48px;
+        border: 1px solid var(--ss-border);
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: var(--ss-shadow);
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .sk-search-wrap input:focus {
+        outline: none;
+        border-color: var(--ss-primary);
+        box-shadow: 0 0 0 4px rgba(91, 75, 219, .14);
+    }
+
+    .sk-search-icon {
+        position: absolute;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 16px;
+        pointer-events: none;
+    }
+
+    /* Cards */
+    .sk-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        border: 1px solid var(--ss-border);
+        border-radius: 20px;
+        padding: 26px;
+        transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+    }
+
+    .sk-card:hover {
+        transform: translateY(-6px);
+        border-color: #cfc8f8;
+        box-shadow: 0 22px 48px rgba(91, 75, 219, .14);
+    }
+
+    .sk-card-top {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 16px;
+    }
+
+    .sk-avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+
+    .sk-avatar.violet { background: var(--ss-primary-soft); color: var(--ss-primary); }
+    .sk-avatar.amber  { background: var(--ss-accent-soft);  color: #b87800; }
+    .sk-avatar.pink   { background: #ffe9f1;                color: #d6336c; }
+
+    .sk-name {
+        font-size: 19px;
+        font-weight: 800;
+        margin: 0;
+        word-break: break-word;
+    }
+
+    .sk-desc {
+        color: var(--ss-text);
+        font-size: 14px;
+        line-height: 1.75;
+        margin: 0 0 18px;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .sk-date {
+        margin-top: auto;
+        color: var(--ss-muted);
+        font-size: 12px;
+        font-weight: 600;
+        padding-bottom: 16px;
+    }
+
+    .sk-actions {
+        display: flex;
+        gap: 8px;
+        padding-top: 16px;
+        border-top: 1px solid var(--ss-border);
+    }
+
+    .sk-actions .btn {
+        font-size: 13px;
+        padding: 7px 14px;
+    }
+
+    .sk-btn-details {
+        background: var(--ss-primary);
+        color: #fff;
+        border: 1px solid var(--ss-primary);
+    }
+
+    .sk-btn-details:hover {
+        background: var(--ss-primary-dark);
+        border-color: var(--ss-primary-dark);
+        color: #fff;
+    }
+
+    .sk-btn-edit {
+        background: #fff;
+        color: var(--ss-text);
+        border: 1px solid var(--ss-border);
+    }
+
+    .sk-btn-edit:hover {
+        background: var(--ss-primary-soft);
+        color: var(--ss-primary);
+        border-color: #cfc8f8;
+    }
+
+    .sk-btn-delete {
+        margin-left: auto;
+        background: transparent;
+        color: #c0392b;
+        border: 1px solid transparent;
+    }
+
+    .sk-btn-delete:hover {
+        background: #fdecec;
+        color: #c0392b;
+        border-color: #f5c2c2;
+    }
+
+    /* Empty state */
+    .sk-empty {
+        text-align: center;
+        background: #fff;
+        border: 2px dashed #cfc8f8;
+        border-radius: 22px;
+        padding: 64px 24px;
+    }
+
+    .sk-empty-icon {
+        width: 76px;
+        height: 76px;
+        border-radius: 22px;
+        background: var(--ss-primary-soft);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 34px;
+        margin: 0 auto 20px;
+    }
+
+    .sk-empty h4 { font-weight: 800; margin-bottom: 8px; }
+    .sk-empty p { color: var(--ss-text); margin-bottom: 22px; }
+
+    .sk-alert {
+        border: none;
+        border-radius: 14px;
+        background: #e3f8ea;
+        color: #15803d;
+        font-weight: 600;
+        padding: 14px 18px;
+    }
+
+    @@media (max-width: 767px) {
+        .sk-header { padding: 40px 0 40px; }
+        .sk-add-btn { width: 100%; }
+        .sk-search-wrap { max-width: 100%; }
+    }
+</style>
+
+<!-- HEADER -->
+<section class="sk-header">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3">
+            <div>
+                <span class="sk-count">@skills.Count skills</span>
+                <h1 class="sk-title">Skills</h1>
+                <p class="sk-subtitle">
+                    Explore skills available in the SkillSwap community.
+                </p>
+            </div>
+
+            <a asp-action="Create" class="btn sk-add-btn">+ Add Skill</a>
         </div>
-
-        <a asp-action="Create" class="btn btn-primary">
-            + Add Skill
-        </a>
     </div>
+</section>
+
+<div class="container pb-5">
 
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success">
+        <div class="alert sk-alert alert-dismissible fade show mt-4" role="alert">
             @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
 
-    @if (Model != null && Model.Any())
+    @if (skills.Any())
     {
-        <div class="row g-4">
+        <!-- SEARCH -->
+        <div class="sk-search-wrap">
+            <span class="sk-search-icon">🔍</span>
+            <input type="search" id="skillSearch" placeholder="Search skills..." autocomplete="off" />
+        </div>
 
-            @foreach (var skill in Model)
+        <div class="row g-4" id="skillGrid">
+
+            @for (var i = 0; i < skills.Count; i++)
             {
-                <div class="col-12 col-md-6 col-lg-4">
+                var skill = skills[i];
+                var tone = tones[i % tones.Length];
+                var initial = string.IsNullOrWhiteSpace(skill.Name) ? "?" : skill.Name.Trim().Substring(0, 1).ToUpper();
 
-                    <div class="card h-100 border-0 shadow-sm">
+                <div class="col-12 col-md-6 col-lg-4 sk-item"
+                     data-search="@((skill.Name + " " + skill.Description).ToLower())">
 
-                        <div class="card-body p-4">
+                    <div class="sk-card">
 
-                            <span class="badge bg-primary mb-3">
-                                Skill
-                            </span>
-
-                            <h4 class="fw-bold">
-                                @skill.Name
-                            </h4>
-
-                            <p class="text-muted">
-                                @(string.IsNullOrWhiteSpace(skill.Description)
-                                    ? "No description provided."
-                                    : skill.Description)
-                            </p>
-
-                            <small class="text-muted">
-                                Added:
-                                @skill.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")
-                            </small>
-
+                        <div class="sk-card-top">
+                            <div class="sk-avatar @tone">@initial</div>
+                            <h4 class="sk-name">@skill.Name</h4>
                         </div>
 
-                        <div class="card-footer bg-white border-0 p-4 pt-0">
+                        <p class="sk-desc">
+                            @(string.IsNullOrWhiteSpace(skill.Description)
+                                ? "No description provided."
+                                : skill.Description)
+                        </p>
 
-                            <div class="d-flex gap-2">
+                        <div class="sk-date">
+                            Added @skill.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")
+                        </div>
 
-                                <a asp-action="Details"
-                                   asp-route-id="@skill.Id"
-                                   class="btn btn-outline-primary btn-sm">
-                                    Details
-                                </a>
-
-                                <a asp-action="Edit"
-                                   asp-route-id="@skill.Id"
-                                   class="btn btn-outline-secondary btn-sm">
-                                    Edit
-                                </a>
-
-                                <a asp-action="Delete"
-                                   asp-route-id="@skill.Id"
-                                   class="btn btn-outline-danger btn-sm">
-                                    Delete
-                                </a>
-
-                            </div>
-
+                        <div class="sk-actions">
+                            <a asp-action="Details" asp-route-id="@skill.Id" class="btn sk-btn-details">Details</a>
+                            <a asp-action="Edit" asp-route-id="@skill.Id" class="btn sk-btn-edit">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@skill.Id" class="btn sk-btn-delete">Delete</a>
                         </div>
 
                     </div>
-
                 </div>
             }
 
         </div>
+
+        <!-- No search result -->
+        <div class="sk-empty d-none" id="noResults">
+            <div class="sk-empty-icon">🤔</div>
+            <h4>No matching skills</h4>
+            <p>Try a different word, or add this skill to the community.</p>
+            <a asp-action="Create" class="btn sk-add-btn">+ Add Skill</a>
+        </div>
     }
     else
     {
-        <div class="text-center py-5">
-
-            <div class="card border-0 shadow-sm">
-                <div class="card-body py-5">
-
-                    <h4 class="fw-bold">
-                        No skills available yet
-                    </h4>
-
-                    <p class="text-muted">
-                        Be the first person to add a skill!
-                    </p>
-
-                    <a asp-action="Create"
-                       class="btn btn-primary">
-                        Add Your First Skill
-                    </a>
-
-                </div>
-            </div>
-
+        <div class="sk-empty mt-5">
+            <div class="sk-empty-icon">🌱</div>
+            <h4>No skills available yet</h4>
+            <p>Be the first person to add a skill!</p>
+            <a asp-action="Create" class="btn sk-add-btn">Add Your First Skill</a>
         </div>
     }
 
 </div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var input = document.getElementById('skillSearch');
+            if (!input) return;
+
+            var items = document.querySelectorAll('.sk-item');
+            var noResults = document.getElementById('noResults');
+
+            input.addEventListener('input', function () {
+                var q = input.value.trim().toLowerCase();
+                var visible = 0;
+
+                items.forEach(function (item) {
+                    var match = item.getAttribute('data-search').indexOf(q) !== -1;
+                    item.classList.toggle('d-none', !match);
+                    if (match) visible++;
+                });
+
+                noResults.classList.toggle('d-none', visible !== 0);
+            });
+        })();
+    </script>
+}

@@ -1,0 +1,891 @@
+@{
+    ViewData["Title"] = "My Dashboard";
+
+    var userName = (ViewBag.UserName as string) ?? "there";
+    var initial = string.IsNullOrWhiteSpace(userName) ? "?" : userName.Trim().Substring(0, 1).ToUpper();
+
+    var mySkills = (ViewBag.MySkills as IEnumerable<object>)?
+        .Select(s => s?.ToString() ?? "")
+        .Where(s => !string.IsNullOrWhiteSpace(s))
+        .ToList() ?? new List<string>();
+
+    int sent = Convert.ToInt32(ViewBag.SentCount ?? 0);
+    int received = Convert.ToInt32(ViewBag.ReceivedCount ?? 0);
+    int pending = Convert.ToInt32(ViewBag.PendingCount ?? 0);
+    int accepted = Convert.ToInt32(ViewBag.AcceptedCount ?? 0);
+
+    int totalRequests = sent + received;
+    int rejected = Math.Max(totalRequests - pending - accepted, 0);
+
+    var tones = new[] { "violet", "amber", "pink" };
+
+    var stepSkills = mySkills.Any();
+    var stepSent = sent > 0;
+    var stepAccepted = accepted > 0;
+    var stepsDone = (stepSkills ? 1 : 0) + (stepSent ? 1 : 0) + (stepAccepted ? 1 : 0);
+    var stepsPct = (int)Math.Round(stepsDone * 100.0 / 3);
+}
+
+<style>
+    .db {
+        background: var(--ss-bg);
+    }
+
+    .db-ico {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+    }
+
+    /* ================= PAGE HEADER ================= */
+    .db-head {
+        background: #fff;
+        border-bottom: 1px solid var(--ss-border);
+        padding: 30px 0 28px;
+    }
+
+    .db-crumb {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--ss-muted);
+        margin-bottom: 14px;
+    }
+
+        .db-crumb a {
+            color: var(--ss-muted);
+            font-weight: 600;
+        }
+
+            .db-crumb a:hover {
+                color: var(--ss-primary);
+            }
+
+        .db-crumb strong {
+            color: var(--ss-ink);
+            font-weight: 700;
+        }
+
+    .db-hello {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .db-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        background: var(--ss-primary);
+        color: #fff;
+        font-size: 24px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 0 4px var(--ss-primary-soft);
+    }
+
+    .db-title {
+        font-size: clamp(26px, 3.2vw, 34px);
+        font-weight: 800;
+        letter-spacing: -0.8px;
+        margin: 0 0 4px;
+    }
+
+    .db-sub {
+        color: var(--ss-text);
+        font-size: 15px;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .db-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--ss-primary);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 700;
+        padding: 11px 20px;
+        border-radius: 10px;
+        transition: background-color .2s ease;
+        white-space: nowrap;
+    }
+
+        .db-primary:hover {
+            background: var(--ss-primary-dark);
+            color: #fff;
+        }
+
+    .db-body {
+        padding: 28px 12px 80px;
+    }
+
+    /* ================= ALERT ================= */
+    .db-alert {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+        background: var(--ss-accent-soft);
+        border: 1px solid #f6dd9a;
+        border-radius: 14px;
+        padding: 14px 18px;
+        margin-bottom: 22px;
+    }
+
+    .db-alert-text {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #8a5a00;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .db-alert a {
+        background: var(--ss-accent);
+        color: var(--ss-ink);
+        font-size: 13px;
+        font-weight: 800;
+        padding: 8px 16px;
+        border-radius: 9px;
+        transition: background-color .2s ease;
+    }
+
+        .db-alert a:hover {
+            background: var(--ss-accent-dark);
+            color: var(--ss-ink);
+        }
+
+    /* ================= STAT CARDS ================= */
+    .db-stat {
+        display: block;
+        height: 100%;
+        background: #fff;
+        border: 1px solid var(--ss-border);
+        border-radius: 16px;
+        padding: 20px;
+        transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+    }
+
+        .db-stat:hover {
+            border-color: #cfc8f8;
+            box-shadow: 0 10px 30px rgba(29, 27, 58, .08);
+            transform: translateY(-2px);
+        }
+
+    .db-stat-ico {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16px;
+    }
+
+        .db-stat-ico.violet {
+            background: var(--ss-primary-soft);
+            color: var(--ss-primary);
+        }
+
+        .db-stat-ico.green {
+            background: #e3f8ea;
+            color: #15803d;
+        }
+
+        .db-stat-ico.amber {
+            background: var(--ss-accent-soft);
+            color: #a86a00;
+        }
+
+        .db-stat-ico.pink {
+            background: #ffe9f1;
+            color: #d6336c;
+        }
+
+    .db-stat-num {
+        font-size: 34px;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -1px;
+        color: var(--ss-ink);
+        margin-bottom: 6px;
+    }
+
+    .db-stat-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--ss-text);
+        margin: 0;
+    }
+
+    /* ================= PANELS ================= */
+    .db-panel {
+        height: 100%;
+        background: #fff;
+        border: 1px solid var(--ss-border);
+        border-radius: 16px;
+        padding: 24px;
+    }
+
+    .db-panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .db-panel-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 17px;
+        font-weight: 800;
+        margin: 0;
+    }
+
+        .db-panel-title svg {
+            color: var(--ss-primary);
+        }
+
+    .db-link {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--ss-primary);
+    }
+
+        .db-link:hover {
+            color: var(--ss-primary-dark);
+        }
+
+    .db-text {
+        color: var(--ss-text);
+        font-size: 14px;
+        line-height: 1.7;
+        margin: 0 0 16px;
+    }
+
+    /* Skill tags */
+    .db-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .db-tag {
+        border-radius: 30px;
+        padding: 7px 14px;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+        .db-tag.violet {
+            background: var(--ss-primary-soft);
+            color: var(--ss-primary-dark);
+        }
+
+        .db-tag.amber {
+            background: var(--ss-accent-soft);
+            color: #8a5a00;
+        }
+
+        .db-tag.pink {
+            background: #ffe9f1;
+            color: #b8285a;
+        }
+
+    .db-empty-note {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px dashed #cfc8f8;
+        border-radius: 12px;
+        padding: 14px 16px;
+        color: var(--ss-text);
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .db-outline {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #fff;
+        border: 1px solid var(--ss-border);
+        color: var(--ss-primary);
+        font-size: 14px;
+        font-weight: 700;
+        padding: 9px 18px;
+        border-radius: 10px;
+        transition: background-color .2s ease, border-color .2s ease;
+    }
+
+        .db-outline:hover {
+            background: var(--ss-primary-soft);
+            border-color: #cfc8f8;
+            color: var(--ss-primary-dark);
+        }
+
+    /* Status bar */
+    .db-bar {
+        display: flex;
+        height: 12px;
+        border-radius: 20px;
+        overflow: hidden;
+        background: var(--ss-primary-soft);
+        gap: 2px;
+        margin-bottom: 16px;
+    }
+
+        .db-bar span {
+            display: block;
+            min-width: 6px;
+        }
+
+        .db-bar .pending {
+            background: var(--ss-accent);
+        }
+
+        .db-bar .accepted {
+            background: #22c55e;
+        }
+
+        .db-bar .rejected {
+            background: #ef6a6a;
+        }
+
+    .db-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 20px;
+    }
+
+        .db-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ss-text);
+        }
+
+        .db-legend i {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .db-legend b {
+            color: var(--ss-ink);
+            font-weight: 800;
+        }
+
+    /* Checklist */
+    .db-progress-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--ss-text);
+        margin-bottom: 8px;
+    }
+
+        .db-progress-top b {
+            color: var(--ss-primary);
+        }
+
+    .db-progress {
+        height: 8px;
+        background: var(--ss-primary-soft);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 18px;
+    }
+
+        .db-progress span {
+            display: block;
+            height: 100%;
+            background: linear-gradient(90deg, var(--ss-primary), var(--ss-accent));
+            border-radius: 10px;
+        }
+
+    .db-steps {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .db-step {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 0;
+    }
+
+        .db-step + .db-step {
+            border-top: 1px solid var(--ss-border);
+        }
+
+    .db-check {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        border: 2px solid #d4d0ee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+    }
+
+        .db-check svg {
+            width: 14px;
+            height: 14px;
+            opacity: 0;
+        }
+
+    .db-step.done .db-check {
+        background: var(--ss-primary);
+        border-color: var(--ss-primary);
+    }
+
+        .db-step.done .db-check svg {
+            opacity: 1;
+        }
+
+    .db-step-main {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .db-step-title {
+        font-size: 14px;
+        font-weight: 700;
+        margin: 0;
+        color: var(--ss-ink);
+    }
+
+    .db-step.done .db-step-title {
+        color: var(--ss-muted);
+        text-decoration: line-through;
+    }
+
+    .db-step-desc {
+        font-size: 12px;
+        color: var(--ss-muted);
+        margin: 2px 0 0;
+    }
+
+    .db-step a {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--ss-primary);
+        white-space: nowrap;
+    }
+
+    .db-step.done a {
+        display: none;
+    }
+
+    /* CTA */
+    .db-cta {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, #3b2fa8 0%, #5b4bdb 100%);
+        border-radius: 18px;
+        padding: 30px 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        flex-wrap: wrap;
+    }
+
+        .db-cta::after {
+            content: "";
+            position: absolute;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            border: 40px solid rgba(255, 182, 39, .13);
+            right: -70px;
+            bottom: -110px;
+        }
+
+    .db-cta-text {
+        position: relative;
+        z-index: 1;
+        max-width: 560px;
+    }
+
+    .db-cta h2 {
+        color: #fff;
+        font-size: 22px;
+        font-weight: 800;
+        margin: 0 0 6px;
+    }
+
+    .db-cta p {
+        color: #dedbff;
+        font-size: 14px;
+        line-height: 1.7;
+        margin: 0;
+    }
+
+    .db-cta-actions {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .db-cta-btn {
+        display: inline-flex;
+        align-items: center;
+        font-size: 14px;
+        font-weight: 800;
+        padding: 11px 22px;
+        border-radius: 10px;
+        transition: background-color .2s ease, transform .2s ease;
+    }
+
+        .db-cta-btn.solid {
+            background: var(--ss-accent);
+            color: var(--ss-ink);
+        }
+
+            .db-cta-btn.solid:hover {
+                background: var(--ss-accent-dark);
+                color: var(--ss-ink);
+                transform: translateY(-2px);
+            }
+
+        .db-cta-btn.ghost {
+            background: rgba(255, 255, 255, .12);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, .25);
+        }
+
+            .db-cta-btn.ghost:hover {
+                background: rgba(255, 255, 255, .22);
+                color: #fff;
+            }
+
+    .db-section-title {
+        font-size: 18px;
+        font-weight: 800;
+        margin: 0 0 14px;
+    }
+
+    @@media (max-width: 767px) {
+        .db-head {
+            padding: 24px 0;
+        }
+
+        .db-primary {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .db-avatar {
+            width: 52px;
+            height: 52px;
+            font-size: 21px;
+        }
+
+        .db-cta {
+            padding: 24px 20px;
+        }
+
+        .db-cta-actions, .db-cta-btn {
+            width: 100%;
+        }
+
+        .db-cta-btn {
+            justify-content: center;
+        }
+    }
+
+    @@media (prefers-reduced-motion: reduce) {
+        .db-stat, .db-primary, .db-cta-btn {
+            transition: none;
+        }
+
+            .db-stat:hover {
+                transform: none;
+            }
+    }
+</style>
+
+<div class="db">
+
+    <!-- PAGE HEADER -->
+    <section class="db-head">
+        <div class="container">
+
+            <nav class="db-crumb" aria-label="Breadcrumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <span>/</span>
+                <strong>Dashboard</strong>
+            </nav>
+
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+
+                <div class="db-hello">
+                    <div class="db-avatar">@initial</div>
+                    <div>
+                        <h1 class="db-title">Welcome, @userName</h1>
+                        <p class="db-sub">Manage your skills and keep track of your skill exchange activities.</p>
+                    </div>
+                </div>
+
+                <a asp-controller="Members" asp-action="Index" class="db-primary">
+                    <svg class="db-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+                    Explore Members
+                </a>
+
+            </div>
+
+        </div>
+    </section>
+
+    <div class="container db-body">
+
+        @if (pending > 0)
+        {
+            <div class="db-alert" role="status">
+                <span class="db-alert-text">
+                    <svg class="db-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+                    You have @pending pending exchange @(pending == 1 ? "request" : "requests").
+                </span>
+                <a asp-controller="SwapRequests" asp-action="Index">Review requests</a>
+            </div>
+        }
+
+        <!-- STATS -->
+        <h2 class="db-section-title">Exchange requests</h2>
+
+        <div class="row g-3 mb-4">
+
+            <div class="col-6 col-lg-3">
+                <a asp-controller="SwapRequests" asp-action="Index" class="db-stat">
+                    <div class="db-stat-ico violet">
+                        <svg class="db-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12 20 4l-4 16-4-6z" /></svg>
+                    </div>
+                    <div class="db-stat-num">@sent</div>
+                    <p class="db-stat-label">Sent</p>
+                </a>
+            </div>
+
+            <div class="col-6 col-lg-3">
+                <a asp-controller="SwapRequests" asp-action="Index" class="db-stat">
+                    <div class="db-stat-ico green">
+                        <svg class="db-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12m0 0-4-4m4 4 4-4M5 20h14" /></svg>
+                    </div>
+                    <div class="db-stat-num">@received</div>
+                    <p class="db-stat-label">Received</p>
+                </a>
+            </div>
+
+            <div class="col-6 col-lg-3">
+                <a asp-controller="SwapRequests" asp-action="Index" class="db-stat">
+                    <div class="db-stat-ico amber">
+                        <svg class="db-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+                    </div>
+                    <div class="db-stat-num">@pending</div>
+                    <p class="db-stat-label">Pending</p>
+                </a>
+            </div>
+
+            <div class="col-6 col-lg-3">
+                <a asp-controller="SwapRequests" asp-action="Index" class="db-stat">
+                    <div class="db-stat-ico pink">
+                        <svg class="db-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10" /></svg>
+                    </div>
+                    <div class="db-stat-num">@accepted</div>
+                    <p class="db-stat-label">Accepted</p>
+                </a>
+            </div>
+
+        </div>
+
+        <div class="row g-3 mb-3">
+
+            <!-- MY SKILLS -->
+            <div class="col-lg-6">
+                <div class="db-panel">
+
+                    <div class="db-panel-head">
+                        <h3 class="db-panel-title">
+                            <svg class="db-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.4 1 2.5h6c0-1.1.3-1.8 1-2.5A6 6 0 0 0 12 3z" /></svg>
+                            My Skills
+                        </h3>
+                        @if (mySkills.Any())
+                        {
+                            <span class="db-link" style="color:var(--ss-muted);">@mySkills.Count total</span>
+                        }
+                    </div>
+
+                    @if (mySkills.Any())
+                    {
+                        <div class="db-tags">
+                            @for (var i = 0; i < mySkills.Count; i++)
+                            {
+                                <span class="db-tag @tones[i % tones.Length]">@mySkills[i]</span>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="db-empty-note">You have not added any skills yet.</p>
+                    }
+
+                </div>
+            </div>
+
+            <!-- I WANT TO LEARN -->
+            <div class="col-lg-6">
+                <div class="db-panel">
+
+                    <div class="db-panel-head">
+                        <h3 class="db-panel-title">
+                            <svg class="db-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1" /></svg>
+                            I Want To Learn
+                        </h3>
+                    </div>
+
+                    <p class="db-text">Your learning goals will appear here.</p>
+
+                    <a asp-controller="Members" asp-action="Index" class="db-outline">Find Skills to Learn</a>
+
+                </div>
+            </div>
+
+        </div>
+
+        <div class="row g-3 mb-4">
+
+            <!-- STATUS BREAKDOWN -->
+            <div class="col-lg-6">
+                <div class="db-panel">
+
+                    <div class="db-panel-head">
+                        <h3 class="db-panel-title">
+                            <svg class="db-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg>
+                            Request status
+                        </h3>
+                        <a asp-controller="SwapRequests" asp-action="Index" class="db-link">View all</a>
+                    </div>
+
+                    @if (totalRequests > 0)
+                    {
+                        <div class="db-bar" role="img" aria-label="Request status breakdown">
+                            @if (pending > 0)
+                            {
+                                <span class="pending" style="flex:@pending"></span>
+                            }
+                            @if (accepted > 0)
+                            {
+                                <span class="accepted" style="flex:@accepted"></span>
+                            }
+                            @if (rejected > 0)
+                            {
+                                <span class="rejected" style="flex:@rejected"></span>
+                            }
+                        </div>
+
+                        <div class="db-legend">
+                            <span><i style="background:var(--ss-accent)"></i>Pending <b>@pending</b></span>
+                            <span><i style="background:#22c55e"></i>Accepted <b>@accepted</b></span>
+                            <span><i style="background:#ef6a6a"></i>Rejected <b>@rejected</b></span>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="db-empty-note">No exchange requests yet. Send your first one from a member's profile.</p>
+                    }
+
+                </div>
+            </div>
+
+            <!-- GETTING STARTED -->
+            <div class="col-lg-6">
+                <div class="db-panel">
+
+                    <div class="db-panel-head">
+                        <h3 class="db-panel-title">
+                            <svg class="db-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4M5 4h11l-2 4 2 4H5" /></svg>
+                            Getting started
+                        </h3>
+                    </div>
+
+                    <div class="db-progress-top">
+                        <span>@stepsDone of 3 steps done</span>
+                        <b>@stepsPct%</b>
+                    </div>
+                    <div class="db-progress"><span style="width:@(stepsPct)%"></span></div>
+
+                    <ul class="db-steps">
+
+                        <li class="db-step @(stepSkills ? "done" : "")">
+                            <span class="db-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10" /></svg></span>
+                            <div class="db-step-main">
+                                <p class="db-step-title">Add your skills</p>
+                                <p class="db-step-desc">Let others know what you can teach.</p>
+                            </div>
+                            <a asp-controller="Skills" asp-action="Create">Add skill</a>
+                        </li>
+
+                        <li class="db-step @(stepSent ? "done" : "")">
+                            <span class="db-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10" /></svg></span>
+                            <div class="db-step-main">
+                                <p class="db-step-title">Send your first request</p>
+                                <p class="db-step-desc">Pick a member who can teach what you want.</p>
+                            </div>
+                            <a asp-controller="Members" asp-action="Index">Find members</a>
+                        </li>
+
+                        <li class="db-step @(stepAccepted ? "done" : "")">
+                            <span class="db-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10" /></svg></span>
+                            <div class="db-step-main">
+                                <p class="db-step-title">Get your first accepted swap</p>
+                                <p class="db-step-desc">Start learning together.</p>
+                            </div>
+                            <a asp-controller="SwapRequests" asp-action="Index">View requests</a>
+                        </li>
+
+                    </ul>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- CONTINUE -->
+        <section class="db-cta">
+            <div class="db-cta-text">
+                <h2>Continue Your Skill Journey</h2>
+                <p>
+                    Explore members, discover new skills, and find someone
+                    who can teach you what you want to learn.
+                </p>
+            </div>
+
+            <div class="db-cta-actions">
+                <a asp-controller="Members" asp-action="Index" class="db-cta-btn solid">Explore Members</a>
+                <a asp-controller="SwapRequests" asp-action="Index" class="db-cta-btn ghost">View Exchange Requests</a>
+            </div>
+        </section>
+
+    </div>
+</div>

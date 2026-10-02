@@ -1,34 +1,52 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SkillSwap.Data;
 using SkillSwap.Models;
 
 namespace SkillSwap.Controllers
 {
+    [Authorize]
     public class SwapRequestsController : Controller
     {
         private readonly SkillSwapDbContext _context;
 
-    public SwapRequestsController(SkillSwapDbContext context)
+        public SwapRequestsController(SkillSwapDbContext context)
         {
             _context = context;
         }
 
-        // GET: SwapRequests
+        // ==========================================
+        // REQUEST LIST
+        // ==========================================
         public async Task<IActionResult> Index()
         {
+            var userId = GetCurrentUserId();
+
+            if (userId == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
             var requests = await _context.SwapRequests
                 .Include(r => r.Sender)
                 .Include(r => r.Receiver)
                 .Include(r => r.OfferedSkill)
                 .Include(r => r.RequestedSkill)
+                .Where(r =>
+                    r.SenderId == userId.Value ||
+                    r.ReceiverId == userId.Value
+                )
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
 
             return View(requests);
         }
 
-        // GET: SwapRequests/Details/5
+        // ==========================================
+        // DETAILS
+        // ==========================================
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -36,12 +54,25 @@ namespace SkillSwap.Controllers
                 return NotFound();
             }
 
+            var userId = GetCurrentUserId();
+
+            if (userId == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
             var request = await _context.SwapRequests
                 .Include(r => r.Sender)
                 .Include(r => r.Receiver)
                 .Include(r => r.OfferedSkill)
                 .Include(r => r.RequestedSkill)
-                .FirstOrDefaultAsync(r => r.Id == id);
+                .FirstOrDefaultAsync(r =>
+                    r.Id == id &&
+                    (
+                        r.SenderId == userId.Value ||
+                        r.ReceiverId == userId.Value
+                    )
+                );
 
             if (request == null)
             {
@@ -51,13 +82,36 @@ namespace SkillSwap.Controllers
             return View(request);
         }
 
-        // GET: SwapRequests/Create
+        // ==========================================
+        // CREATE - GET
+        // ==========================================
         [HttpGet]
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create(int receiverId)
         {
-            ViewBag.Users = await _context.Users
-                .OrderBy(u => u.FullName)
-                .ToListAsync();
+            var senderId = GetCurrentUserId();
+
+            if (senderId == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            if (senderId.Value == receiverId)
+            {
+                TempData["ErrorMessage"] =
+                    "You cannot send a skill exchange request to yourself.";
+
+                return RedirectToAction("Index", "Members");
+            }
+
+            var receiver = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == receiverId);
+
+            if (receiver == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.Receiver = receiver;
 
             ViewBag.Skills = await _context.Skills
                 .OrderBy(s => s.Name)
@@ -66,21 +120,29 @@ namespace SkillSwap.Controllers
             return View();
         }
 
-        // POST: SwapRequests/Create
+        // ==========================================
+        // CREATE - POST
+        // ==========================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(
-            int senderId,
             int receiverId,
             int offeredSkillId,
             int requestedSkillId,
             string message)
         {
-            if (senderId == receiverId)
+            var senderId = GetCurrentUserId();
+
+            if (senderId == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            if (senderId.Value == receiverId)
             {
                 ModelState.AddModelError(
                     "",
-                    "Sender and receiver must be different."
+                    "You cannot send a request to yourself."
                 );
             }
 
@@ -92,43 +154,42 @@ namespace SkillSwap.Controllers
                 );
             }
 
-            var senderExists = await _context.Users
-                .AnyAsync(u => u.Id == senderId);
+            var receiver = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == receiverId);
 
-            var receiverExists = await _context.Users
-                .AnyAsync(u => u.Id == receiverId);
-
-            var offeredSkillExists = await _context.Skills
-                .AnyAsync(s => s.Id == offeredSkillId);
-
-            var requestedSkillExists = await _context.Skills
-                .AnyAsync(s => s.Id == requestedSkillId);
-
-            if (!senderExists)
+            if (receiver == null)
             {
-                ModelState.AddModelError("", "Selected sender does not exist.");
+                ModelState.AddModelError(
+                    "",
+                    "Receiver account does not exist."
+                );
             }
 
-            if (!receiverExists)
+            var offeredSkill = await _context.Skills
+                .FirstOrDefaultAsync(s => s.Id == offeredSkillId);
+
+            if (offeredSkill == null)
             {
-                ModelState.AddModelError("", "Selected receiver does not exist.");
+                ModelState.AddModelError(
+                    "",
+                    "Selected offered skill does not exist."
+                );
             }
 
-            if (!offeredSkillExists)
-            {
-                ModelState.AddModelError("", "Selected offered skill does not exist.");
-            }
+            var requestedSkill = await _context.Skills
+                .FirstOrDefaultAsync(s => s.Id == requestedSkillId);
 
-            if (!requestedSkillExists)
+            if (requestedSkill == null)
             {
-                ModelState.AddModelError("", "Selected requested skill does not exist.");
+                ModelState.AddModelError(
+                    "",
+                    "Selected requested skill does not exist."
+                );
             }
 
             if (!ModelState.IsValid)
             {
-                ViewBag.Users = await _context.Users
-                    .OrderBy(u => u.FullName)
-                    .ToListAsync();
+                ViewBag.Receiver = receiver;
 
                 ViewBag.Skills = await _context.Skills
                     .OrderBy(s => s.Name)
@@ -137,14 +198,22 @@ namespace SkillSwap.Controllers
                 return View();
             }
 
+            // ==========================================
+            // CREATE REQUEST
+            // ==========================================
+
             var swapRequest = new SwapRequest
             {
-                SenderId = senderId,
+                SenderId = senderId.Value,
                 ReceiverId = receiverId,
+
                 OfferedSkillId = offeredSkillId,
                 RequestedSkillId = requestedSkillId,
-                Message = message ?? string.Empty,
+
+                Message = message?.Trim() ?? string.Empty,
+
                 Status = "Pending",
+
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -153,18 +222,30 @@ namespace SkillSwap.Controllers
             await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] =
-                "Swap request sent successfully!";
+                "Skill exchange request sent successfully!";
 
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: SwapRequests/Accept/5
+        // ==========================================
+        // ACCEPT REQUEST
+        // ==========================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Accept(int id)
         {
+            var userId = GetCurrentUserId();
+
+            if (userId == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
             var request = await _context.SwapRequests
-                .FindAsync(id);
+                .FirstOrDefaultAsync(r =>
+                    r.Id == id &&
+                    r.ReceiverId == userId.Value
+                );
 
             if (request == null)
             {
@@ -176,18 +257,30 @@ namespace SkillSwap.Controllers
             await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] =
-                "Swap request accepted successfully!";
+                "Skill exchange request accepted!";
 
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: SwapRequests/Reject/5
+        // ==========================================
+        // REJECT REQUEST
+        // ==========================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Reject(int id)
         {
+            var userId = GetCurrentUserId();
+
+            if (userId == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
             var request = await _context.SwapRequests
-                .FindAsync(id);
+                .FirstOrDefaultAsync(r =>
+                    r.Id == id &&
+                    r.ReceiverId == userId.Value
+                );
 
             if (request == null)
             {
@@ -199,11 +292,26 @@ namespace SkillSwap.Controllers
             await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] =
-                "Swap request rejected successfully!";
+                "Skill exchange request rejected.";
 
             return RedirectToAction(nameof(Index));
         }
+
+        // ==========================================
+        // GET CURRENT LOGGED-IN USER ID
+        // ==========================================
+        private int? GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirstValue(
+                ClaimTypes.NameIdentifier
+            );
+
+            if (int.TryParse(userIdClaim, out int userId))
+            {
+                return userId;
+            }
+
+            return null;
+        }
     }
-
-
 }

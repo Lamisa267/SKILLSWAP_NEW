@@ -1,8 +1,362 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
+    var signedIn = User?.Identity?.IsAuthenticated ?? false;
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<style>
+    .hm { --g: #0b7a5f; --g-dark: #086247; --g-soft: #e4f4ee; --ink: #1d2a44; --mut: #5d6b7a; --line: #e6eeea; }
+    .hm a { text-decoration: none; }
+    .hm svg.i { width: 18px; height: 18px; flex-shrink: 0; }
+
+    /* ===== HERO ===== */
+    .hm-hero { background: linear-gradient(180deg, #eef8f4 0%, #e9f5f0 100%); padding: 44px 0 52px; overflow: hidden; }
+    .hm-badge { display: inline-flex; align-items: center; gap: 8px; background: #d9efe6; color: var(--g); font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 30px; margin-bottom: 22px; }
+    .hm-badge svg { width: 16px; height: 16px; }
+    .hm-h1 { font-size: clamp(38px, 5vw, 54px); font-weight: 800; letter-spacing: -1.5px; color: var(--ink); line-height: 1.1; margin: 0 0 14px; }
+    .hm-h1 span { color: var(--g); }
+    .hm-lead { font-size: 20px; color: #3d4a5c; margin: 0 0 16px; }
+    .hm-p { font-size: 15px; color: var(--mut); line-height: 1.75; max-width: 470px; margin: 0 0 26px; }
+    .hm-btns { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 30px; }
+    .hm-btn { display: inline-flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; padding: 12px 22px; border-radius: 9px; border: 1.5px solid var(--g); transition: background-color .2s ease; }
+    .hm-btn.solid { background: var(--g); color: #fff; }
+    .hm-btn.solid:hover { background: var(--g-dark); color: #fff; }
+    .hm-btn.line { background: transparent; color: var(--g); }
+    .hm-btn.line:hover { background: var(--g-soft); color: var(--g-dark); }
+    .hm-trust { display: flex; flex-wrap: wrap; gap: 14px 34px; font-size: 12.5px; font-weight: 600; color: #3d4a5c; }
+    .hm-trust span { display: inline-flex; align-items: center; gap: 8px; }
+    .hm-trust svg { width: 18px; height: 18px; color: var(--g); }
+
+    .hm-visual { position: relative; max-width: 620px; margin-left: auto; }
+    .hm-visual > svg { width: 100%; height: auto; display: block; }
+    .hm-chip { position: absolute; display: inline-flex; align-items: center; gap: 10px; background: #fff; border-radius: 30px; padding: 7px 18px 7px 8px; font-size: 12.5px; font-weight: 700; color: var(--ink); box-shadow: 0 6px 18px rgba(11, 122, 95, .1); white-space: nowrap; }
+    .hm-chip b { width: 30px; height: 30px; border-radius: 50%; background: var(--g); color: #fff; display: flex; align-items: center; justify-content: center; }
+    .hm-chip b svg { width: 16px; height: 16px; }
+    .hm-chip.c1 { top: 2%; left: 22%; }
+    .hm-chip.c2 { top: 6%; right: 22%; }
+    .hm-chip.c3 { top: 22%; left: 0; }
+    .hm-chip.c4 { top: 29%; right: 0; }
+    .hm-chip.c5 { top: 52%; right: -3%; }
+
+    /* ===== SECTION HEADS ===== */
+    .hm-sec { padding: 40px 0; }
+    .hm-title { display: flex; align-items: center; gap: 12px; font-size: 22px; font-weight: 800; color: var(--ink); margin: 0; }
+    .hm-title svg { width: 22px; height: 22px; color: var(--g); }
+    .hm-subt { color: var(--mut); font-size: 14px; margin: 2px 0 0 34px; }
+    .hm-more { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--g); }
+    .hm-more:hover { color: var(--g-dark); }
+
+    /* ===== POPULAR SKILLS ===== */
+    .hm-skill { display: flex; align-items: center; gap: 16px; background: #fff; border-radius: 14px; padding: 18px 20px; box-shadow: 0 4px 16px rgba(29, 42, 68, .06); height: 100%; transition: box-shadow .2s ease; }
+    .hm-skill:hover { box-shadow: 0 8px 24px rgba(29, 42, 68, .12); }
+    .hm-sico { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .hm-sico svg { width: 30px; height: 30px; }
+    .hm-sico.green { background: #d9f2e3; color: #1f9d55; }
+    .hm-sico.purple { background: #ece3fb; color: #8b5cf6; }
+    .hm-sico.red { background: #fde3e1; color: #ef4444; }
+    .hm-sico.blue { background: #dfeafb; color: #3b82f6; }
+    .hm-sname { flex: 1; min-width: 0; }
+    .hm-sname strong { display: block; font-size: 15px; color: var(--ink); }
+    .hm-sname small { color: var(--mut); font-size: 12.5px; }
+    .hm-arrow { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #d3e6de; color: var(--g); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .hm-arrow svg { width: 15px; height: 15px; }
+
+    /* ===== HOW IT WORKS ===== */
+    .hm-how { background: #fff; padding: 36px 0 40px; }
+    .hm-how-lab { display: flex; align-items: center; justify-content: center; gap: 12px; color: var(--g); font-size: 12.5px; font-weight: 700; }
+    .hm-how-lab::before, .hm-how-lab::after { content: ""; width: 26px; height: 2px; background: var(--g); border-radius: 2px; }
+    .hm-how h2 { text-align: center; font-size: 25px; font-weight: 800; color: var(--ink); margin: 6px 0 30px; }
+    .hm-steps { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+    .hm-step { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 230px; }
+    .hm-num { width: 30px; height: 30px; border-radius: 50%; background: #17a77f; color: #fff; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .hm-sring { width: 46px; height: 46px; border-radius: 50%; background: #dfeee8; color: var(--g); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .hm-sring svg { width: 22px; height: 22px; }
+    .hm-step h4 { font-size: 13.5px; font-weight: 800; color: var(--ink); margin: 0 0 3px; }
+    .hm-step p { font-size: 11.5px; color: var(--mut); line-height: 1.5; margin: 0; }
+    .hm-step-arrow { color: #7cc4ae; align-self: center; width: 22px; height: 22px; flex-shrink: 0; }
+
+    /* ===== WHY ===== */
+    .hm-why { background: #eef8f4; padding: 34px 0 48px; }
+    .hm-why-card { display: flex; align-items: center; gap: 14px; background: #fff; border-radius: 12px; padding: 16px 18px; height: 100%; box-shadow: 0 4px 14px rgba(29, 42, 68, .05); }
+    .hm-why-ico { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .hm-why-ico svg { width: 24px; height: 24px; }
+    .hm-why-ico.a { background: #dff1ea; color: #1f9d7a; }
+    .hm-why-ico.b { background: #dff1ea; color: #1f9d55; }
+    .hm-why-ico.c { background: #ffe5e8; color: #ef4466; }
+    .hm-why-card h5 { font-size: 13px; font-weight: 800; color: var(--ink); margin: 0 0 3px; }
+    .hm-why-card p { font-size: 11.5px; color: var(--mut); line-height: 1.5; margin: 0; }
+
+    @@media (max-width: 991px) {
+        .hm-visual { margin: 30px auto 0; }
+        .hm-step-arrow { display: none; }
+    }
+    @@media (max-width: 575px) {
+        .hm-chip { font-size: 11px; padding: 5px 12px 5px 6px; }
+        .hm-chip b { width: 24px; height: 24px; }
+        .hm-chip.c3, .hm-chip.c5 { display: none; }
+    }
+</style>
+
+<div class="hm">
+
+    <!-- ================= HERO ================= -->
+    <section class="hm-hero">
+        <div class="container">
+            <div class="row align-items-center g-4">
+
+                <div class="col-lg-6">
+                    <span class="hm-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2" /><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 5a3 3 0 0 1 0 6M18 14c1.8.7 3 2.4 3 4.5" /></svg>
+                        A community of learners and teachers
+                    </span>
+
+                    <h1 class="hm-h1">Learn. <span>Share.</span> Grow.</h1>
+                    <p class="hm-lead">Exchange skills with people and learn something new.</p>
+                    <p class="hm-p">
+                        SkillSwap is a peer-to-peer learning platform where people can share what they know,
+                        discover new skills, and connect with others through meaningful skill exchanges.
+                    </p>
+
+                    <div class="hm-btns">
+                        @if (signedIn)
+                        {
+                            <a asp-controller="Dashboard" asp-action="Index" class="hm-btn solid">
+                                My Dashboard
+                                <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
+                            </a>
+                            <a asp-controller="Members" asp-action="Index" class="hm-btn line">Explore Members</a>
+                        }
+                        else
+                        {
+                            <a asp-controller="Account" asp-action="Register" class="hm-btn solid">
+                                Get Started
+                                <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
+                            </a>
+                            <a asp-controller="Account" asp-action="Login" class="hm-btn line">Sign In</a>
+                        }
+                    </div>
+
+                    <div class="hm-trust">
+                        <span>
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3zm-1.2 13.6-3.4-3.4 1.4-1.4 2 2 4.6-4.6 1.4 1.4-6 6z" /></svg>
+                            100+ Skills
+                        </span>
+                        <span>
+                            <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="8" r="3.4" /><path d="M2 20c0-3.6 3.1-6 7-6s7 2.4 7 6z" /><circle cx="17" cy="9" r="2.6" /><path d="M17 14c3 0 5 1.8 5 4.5V20h-4.5c0-2.2-.7-4-2-5.3.4-.5 1-.7 1.5-.7z" /></svg>
+                            Active Community
+                        </span>
+                        <span>
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2.5 2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z" /></svg>
+                            Learn at Your Pace
+                        </span>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="hm-visual">
+
+                        <span class="hm-chip c1"><b><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 1 0 0 18c1.3 0 2-.8 2-1.7 0-.5-.2-.9-.5-1.2-.3-.4-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6H17a4 4 0 0 0 4-4C21 6.7 17 3 12 3zM7.5 12a1.3 1.3 0 1 1 0-2.6 1.3 1.3 0 0 1 0 2.6zm3-4a1.3 1.3 0 1 1 0-2.6 1.3 1.3 0 0 1 0 2.6zm4 0a1.3 1.3 0 1 1 0-2.6 1.3 1.3 0 0 1 0 2.6z" /></svg></b>Design</span>
+                        <span class="hm-chip c2"><b><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 1 0 0 18c1.3 0 2-.8 2-1.7 0-.5-.2-.9-.5-1.2-.3-.4-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6H17a4 4 0 0 0 4-4C21 6.7 17 3 12 3zM7.5 12a1.3 1.3 0 1 1 0-2.6 1.3 1.3 0 0 1 0 2.6zm3-4a1.3 1.3 0 1 1 0-2.6 1.3 1.3 0 0 1 0 2.6zm4 0a1.3 1.3 0 1 1 0-2.6 1.3 1.3 0 0 1 0 2.6z" /></svg></b>Design</span>
+                        <span class="hm-chip c3"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m8 7-5 5 5 5M16 7l5 5-5 5M14 5l-4 14" /></svg></b>Programming</span>
+                        <span class="hm-chip c4"><b><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5h18v14H3z" opacity=".35" /><path d="m10 8.5 6 3.5-6 3.5z" /></svg></b>Video Editing</span>
+                        <span class="hm-chip c5"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg></b>Photography</span>
+
+                        <!-- Illustration -->
+                        <svg viewBox="0 0 620 440" role="img" aria-label="Two people sharing skills on laptops">
+                            <ellipse cx="320" cy="215" rx="215" ry="190" fill="#d4ece3" opacity=".7" />
+                            <ellipse cx="470" cy="140" rx="70" ry="60" fill="#c9e6da" opacity=".6" />
+
+                            <!-- plant -->
+                            <g>
+                                <path d="M92 330c-20-40-18-80 6-120 10 38 12 80-6 120z" fill="#3f9f6d" />
+                                <path d="M92 330c22-34 40-60 38-100-24 26-40 62-38 100z" fill="#5fb883" />
+                                <rect x="70" y="326" width="46" height="40" rx="6" fill="#0f5c4d" />
+                            </g>
+                            <!-- books -->
+                            <rect x="60" y="372" width="190" height="14" rx="4" fill="#0f5c4d" />
+                            <rect x="68" y="386" width="190" height="14" rx="4" fill="#e9f3ee" stroke="#c4ddd2" />
+
+                            <!-- woman -->
+                            <path d="M165 318c0-52 40-86 95-86s95 34 95 86v54H165z" fill="#17695a" />
+                            <path d="M215 160c-14 50-4 96 20 96 12 0 18-8 18-8l8-84c-14-22-36-20-46-4z" fill="#1f1b2e" />
+                            <circle cx="262" cy="170" r="42" fill="#f6c9a8" />
+                            <path d="M222 168c4-34 28-52 56-46 26 6 36 30 30 60-6-24-20-36-44-34-20 2-34 8-42 20z" fill="#1f1b2e" />
+                            <circle cx="248" cy="176" r="3" fill="#2a2438" /><circle cx="274" cy="176" r="3" fill="#2a2438" />
+                            <path d="M252 192q10 8 20 0" stroke="#c2634a" stroke-width="3" fill="none" stroke-linecap="round" />
+                            <circle cx="242" cy="188" r="6" fill="#f2a58c" opacity=".6" /><circle cx="282" cy="188" r="6" fill="#f2a58c" opacity=".6" />
+
+                            <!-- man -->
+                            <path d="M390 340c0-60 34-96 90-96s90 36 90 96v32H390z" fill="#0f4f4a" />
+                            <path d="M456 258l24 40 24-40z" fill="#e8f1ee" />
+                            <circle cx="480" cy="190" r="42" fill="#f1bf9b" />
+                            <path d="M438 188c-6-40 20-66 52-62 26 3 40 26 34 58-10-22-26-30-48-28-18 2-30 12-38 32z" fill="#1d1a2b" />
+                            <circle cx="466" cy="196" r="3" fill="#2a2438" /><circle cx="494" cy="196" r="3" fill="#2a2438" />
+                            <path d="M470 212q10 8 20 0" stroke="#b5553f" stroke-width="3" fill="none" stroke-linecap="round" />
+                            <path d="M392 330l-26-26" stroke="#f1bf9b" stroke-width="16" stroke-linecap="round" />
+
+                            <!-- laptops -->
+                            <g>
+                                <path d="M220 300h150l12 70H208z" fill="#c9ced3" />
+                                <circle cx="295" cy="332" r="7" fill="#e9ecee" />
+                                <rect x="200" y="368" width="190" height="8" rx="4" fill="#9aa2a9" />
+                            </g>
+                            <g>
+                                <path d="M430 300h150l12 70H418z" fill="#c9ced3" />
+                                <circle cx="505" cy="332" r="7" fill="#e9ecee" />
+                                <rect x="410" y="368" width="190" height="8" rx="4" fill="#9aa2a9" />
+                            </g>
+
+                            <!-- mug + leaves -->
+                            <rect x="590" y="340" width="34" height="32" rx="6" fill="#f0d27c" />
+                            <path d="M624 348c12 0 12 18 0 18" stroke="#f0d27c" stroke-width="4" fill="none" />
+                            <path d="M570 372c-6-40 8-70 34-84 4 34-4 62-34 84z" fill="#9ed5b8" opacity=".8" />
+
+                            <!-- desk -->
+                            <rect x="50" y="398" width="540" height="6" rx="3" fill="#f2a45a" />
+                        </svg>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= POPULAR SKILLS ================= -->
+    <section class="hm-sec">
+        <div class="container">
+
+            <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
+                <div>
+                    <h2 class="hm-title">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="1.5" /><rect x="13" y="3" width="8" height="8" rx="1.5" /><rect x="3" y="13" width="8" height="8" rx="1.5" /><rect x="13" y="13" width="8" height="8" rx="1.5" /></svg>
+                        Popular Skills
+                    </h2>
+                    <p class="hm-subt">Explore some of the most popular skills on SkillSwap.</p>
+                </div>
+                <a asp-controller="Skills" asp-action="Index" class="hm-more">
+                    View All Skills
+                    <svg class="i" style="width:14px;height:14px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
+                </a>
+            </div>
+
+            <div class="row g-3">
+
+                <div class="col-sm-6 col-lg-3">
+                    <a asp-controller="Skills" asp-action="Index" class="hm-skill">
+                        <span class="hm-sico green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3" /><path d="m10 9-3 3 3 3M14 9l3 3-3 3" /></svg></span>
+                        <span class="hm-sname"><strong>Programming</strong><small>245+ members</small></span>
+                        <span class="hm-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6" /></svg></span>
+                    </a>
+                </div>
+
+                <div class="col-sm-6 col-lg-3">
+                    <a asp-controller="Skills" asp-action="Index" class="hm-skill">
+                        <span class="hm-sico purple"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 1 0 0 18c1.3 0 2-.8 2-1.7 0-.5-.2-.9-.5-1.2-.3-.4-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6H17a4 4 0 0 0 4-4C21 6.7 17 3 12 3zM7.5 12a1.3 1.3 0 1 1 0-2.6 1.3 1.3 0 0 1 0 2.6zm3-4a1.3 1.3 0 1 1 0-2.6 1.3 1.3 0 0 1 0 2.6zm4 0a1.3 1.3 0 1 1 0-2.6 1.3 1.3 0 0 1 0 2.6z" /></svg></span>
+                        <span class="hm-sname"><strong>Graphic Design</strong><small>180+ members</small></span>
+                        <span class="hm-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6" /></svg></span>
+                    </a>
+                </div>
+
+                <div class="col-sm-6 col-lg-3">
+                    <a asp-controller="Skills" asp-action="Index" class="hm-skill">
+                        <span class="hm-sico red"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="5" width="18" height="14" rx="4" /><path d="m10 9 5 3-5 3z" fill="#fff" /></svg></span>
+                        <span class="hm-sname"><strong>Video Editing</strong><small>142+ members</small></span>
+                        <span class="hm-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6" /></svg></span>
+                    </a>
+                </div>
+
+                <div class="col-sm-6 col-lg-3">
+                    <a asp-controller="Skills" asp-action="Index" class="hm-skill">
+                        <span class="hm-sico blue"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 7h3l1.6-2.5h6.8L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z" /><circle cx="12" cy="13" r="3.6" fill="#fff" /></svg></span>
+                        <span class="hm-sname"><strong>Photography</strong><small>120+ members</small></span>
+                        <span class="hm-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6" /></svg></span>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= HOW IT WORKS ================= -->
+    <section class="hm-how">
+        <div class="container">
+            <div class="hm-how-lab">How It Works</div>
+            <h2>Start Your Skill Exchange Journey</h2>
+
+            <div class="hm-steps">
+
+                <div class="hm-step">
+                    <span class="hm-num">1</span>
+                    <span class="hm-sring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" /></svg></span>
+                    <div><h4>Create Your Profile</h4><p>Tell the community about your skills, interests, and goals.</p></div>
+                </div>
+                <svg class="hm-step-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16m-6-6 6 6-6 6" /></svg>
+
+                <div class="hm-step">
+                    <span class="hm-num">2</span>
+                    <span class="hm-sring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg></span>
+                    <div><h4>Discover Skills</h4><p>Explore different skills and find what you want to learn.</p></div>
+                </div>
+                <svg class="hm-step-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16m-6-6 6 6-6 6" /></svg>
+
+                <div class="hm-step">
+                    <span class="hm-num">3</span>
+                    <span class="hm-sring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2" /><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 5a3 3 0 0 1 0 6M18 14c1.8.7 3 2.4 3 4.5" /></svg></span>
+                    <div><h4>Connect With Members</h4><p>Find the right people to teach or learn from.</p></div>
+                </div>
+                <svg class="hm-step-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16m-6-6 6 6-6 6" /></svg>
+
+                <div class="hm-step">
+                    <span class="hm-num">4</span>
+                    <span class="hm-sring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a8 8 0 0 1 14-4l2 2M20 4v5h-5M20 13a8 8 0 0 1-14 4l-2-2M4 20v-5h5" /></svg></span>
+                    <div><h4>Exchange Knowledge</h4><p>Start learning and teaching through skill exchanges.</p></div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= WHY SKILLSWAP ================= -->
+    <section class="hm-why">
+        <div class="container">
+            <div class="row g-3 align-items-center">
+
+                <div class="col-lg-3">
+                    <h2 class="hm-title" style="font-size:20px">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4C10 4 4 9 4 16c0 1.2.2 2.2.6 3.1C6 12 11 9 17 8c-5 2-9 6-10.6 12.4.6.4 1.2.6 1.9.6C16 21 20 14 20 4z" /></svg>
+                        Why SkillSwap?
+                    </h2>
+                    <p class="hm-subt">More than just a platform — it's a community.</p>
+                </div>
+
+                <div class="col-lg-9">
+                    <div class="row g-3">
+
+                        <div class="col-md-4">
+                            <div class="hm-why-card">
+                                <span class="hm-why-ico a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2" /><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 5a3 3 0 0 1 0 6M18 14c1.8.7 3 2.4 3 4.5" /></svg></span>
+                                <div><h5>Build Connections</h5><p>Meet amazing people who share your interests.</p></div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="hm-why-card">
+                                <span class="hm-why-ico b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 6-6 4 4 8-8M15 7h6v6" /></svg></span>
+                                <div><h5>Grow Your Skills</h5><p>Learn new skills and improve your future.</p></div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="hm-why-card">
+                                <span class="hm-why-ico c"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-8-5.2-8-11a4.6 4.6 0 0 1 8-3 4.6 4.6 0 0 1 8 3c0 5.8-8 11-8 11z" /></svg></span>
+                                <div><h5>Make an Impact</h5><p>Share what you know and help others grow.</p></div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
 </div>

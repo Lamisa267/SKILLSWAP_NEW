@@ -1,49 +1,88 @@
 @{
-ViewData["Title"] = "Access Denied";
+    ViewData["Title"] = "Access Denied";
 }
 
-<div class="container py-5">
+<style>
+    .ad { background: var(--ss-bg, #f6faf8); padding: 70px 12px 90px; }
 
-```
-<div class="row justify-content-center">
+    .ad-card {
+        max-width: 560px;
+        margin: 0 auto;
+        background: #fff;
+        border: 1px solid var(--ss-border, #e1ece7);
+        border-radius: 20px;
+        padding: 44px 36px 40px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(29, 42, 68, .06);
+    }
 
-    <div class="col-12 col-md-8 col-lg-6">
+    .ad-ico {
+        width: 76px;
+        height: 76px;
+        border-radius: 50%;
+        margin: 0 auto 22px;
+        background: var(--ss-accent-soft, #fff4d6);
+        color: #a86a00;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 0 6px #fffaf0;
+    }
 
-        <div class="card border-0 shadow-sm text-center">
+    .ad-ico svg { width: 34px; height: 34px; }
 
-            <div class="card-body p-5">
+    .ad-title {
+        font-size: clamp(26px, 4vw, 34px);
+        font-weight: 800;
+        letter-spacing: -.8px;
+        color: var(--ss-ink, #1d2a44);
+        margin: 0 0 10px;
+    }
 
-                <div style="font-size: 55px;" class="mb-3">
-                    🔒
-                </div>
+    .ad-text { color: var(--ss-text, #4a5668); font-size: 15px; line-height: 1.7; margin: 0 0 6px; }
+    .ad-note { color: var(--ss-muted, #6b7a8a); font-size: 14px; line-height: 1.7; margin: 0 0 26px; }
 
-                <h1 class="fw-bold mb-3">
-                    Access Denied
-                </h1>
+    .ad-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
-                <p class="text-muted mb-4">
-                    You do not have permission to access this page.
-                </p>
+    .ad-btn {
+        display: inline-flex;
+        align-items: center;
+        font-size: 14px;
+        font-weight: 700;
+        padding: 11px 24px;
+        border-radius: 10px;
+        border: 1.5px solid var(--ss-primary, #0b7a5f);
+        text-decoration: none;
+        transition: background-color .2s ease;
+    }
 
-                <p class="text-muted mb-4">
-                    Only administrators can access the Admin Dashboard.
-                </p>
+    .ad-btn.solid { background: var(--ss-primary, #0b7a5f); color: #fff; }
+    .ad-btn.solid:hover { background: var(--ss-primary-dark, #086247); color: #fff; }
+    .ad-btn.line { background: #fff; color: var(--ss-primary, #0b7a5f); }
+    .ad-btn.line:hover { background: var(--ss-primary-soft, #e4f4ee); color: var(--ss-primary-dark, #086247); }
 
-                <a asp-controller="Home"
-                   asp-action="Index"
-                   class="btn btn-success px-4">
+    @@media (max-width: 575px) {
+        .ad { padding: 40px 12px 60px; }
+        .ad-card { padding: 34px 20px 30px; }
+        .ad-btn { width: 100%; justify-content: center; }
+    }
+</style>
 
-                    Back to Home
+<div class="ad">
+    <div class="ad-card">
 
-                </a>
+        <div class="ad-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2.5" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
+        </div>
 
-            </div>
+        <h1 class="ad-title">Access Denied</h1>
+        <p class="ad-text">You do not have permission to access this page.</p>
+        <p class="ad-note">Only administrators can manage members and other admin tools.</p>
 
+        <div class="ad-actions">
+            <a asp-controller="Home" asp-action="Index" class="ad-btn solid">Back to Home</a>
+            <a asp-controller="Members" asp-action="Index" class="ad-btn line">View Members</a>
         </div>
 
     </div>
-
-</div>
-```
-
 </div>

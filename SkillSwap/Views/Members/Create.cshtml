@@ -2,149 +2,644 @@
 
 @{
     ViewData["Title"] = "Add New Member";
+    var suggestions = new[] { "Python", "C#", "Web Design", "Photoshop", "Video Editing", "Photography" };
 }
 
-<div class="container py-5">
+<style>
+    .mf { background: var(--ss-bg); }
 
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
+    /* ================= PAGE HEADER ================= */
+    .mf-head {
+        background: #fff;
+        border-bottom: 1px solid var(--ss-border);
+        padding: 30px 0 28px;
+    }
 
-            <div class="card border-0 shadow-sm rounded-4">
+    .mf-crumb {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--ss-muted);
+        margin-bottom: 14px;
+    }
 
-                <div class="card-body p-4 p-md-5">
+    .mf-crumb a { color: var(--ss-muted); font-weight: 600; }
+    .mf-crumb a:hover { color: var(--ss-primary); }
+    .mf-crumb strong { color: var(--ss-ink); font-weight: 700; }
 
-                    <div class="text-center mb-4">
-                        <h1 class="fw-bold" style="color:#173f3b;">
-                            Add New Member
-                        </h1>
+    .mf-title {
+        font-size: clamp(28px, 3.4vw, 36px);
+        font-weight: 800;
+        letter-spacing: -0.8px;
+        margin: 0 0 6px;
+    }
 
-                        <p class="text-muted">
-                            Create a new SkillSwap member profile.
-                        </p>
-                    </div>
+    .mf-sub {
+        color: var(--ss-text);
+        font-size: 15px;
+        line-height: 1.65;
+        margin: 0;
+    }
 
-                    <form asp-controller="Members"
-                          asp-action="Create"
-                          method="post">
+    .mf-body { padding: 32px 12px 80px; }
 
-                        @Html.AntiForgeryToken()
+    .mf-ico { width: 16px; height: 16px; flex-shrink: 0; }
 
-                        <div asp-validation-summary="ModelOnly"
-                             class="text-danger mb-3">
-                        </div>
+    /* ================= FORM CARD ================= */
+    .mf-card {
+        background: #fff;
+        border: 1px solid var(--ss-border);
+        border-radius: 16px;
+        padding: 8px 28px 28px;
+    }
 
-                        <div class="mb-3">
-                            <label asp-for="Name"
-                                   class="form-label fw-semibold">
-                                Full Name
-                            </label>
+    .mf-section { padding-top: 24px; }
 
-                            <input asp-for="Name"
-                                   class="form-control"
-                                   placeholder="Enter full name" />
+    .mf-section + .mf-section {
+        margin-top: 24px;
+        border-top: 1px solid var(--ss-border);
+    }
 
-                            <span asp-validation-for="Name"
-                                  class="text-danger">
-                            </span>
-                        </div>
+    .mf-section-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
 
-                        <div class="mb-3">
-                            <label asp-for="Email"
-                                   class="form-label fw-semibold">
-                                Email Address
-                            </label>
+    .mf-step {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--ss-primary-soft);
+        color: var(--ss-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
 
-                            <input asp-for="Email"
-                                   class="form-control"
-                                   placeholder="Enter email address" />
+    .mf-step svg { width: 16px; height: 16px; }
 
-                            <span asp-validation-for="Email"
-                                  class="text-danger">
-                            </span>
-                        </div>
+    .mf-section-title {
+        font-size: 16px;
+        font-weight: 800;
+        margin: 0;
+    }
 
-                        <div class="mb-3">
-                            <label asp-for="PhoneNumber"
-                                   class="form-label fw-semibold">
-                                Phone Number
-                            </label>
+    .mf-section-desc {
+        font-size: 13px;
+        color: var(--ss-muted);
+        margin: 2px 0 0;
+    }
 
-                            <input asp-for="PhoneNumber"
-                                   class="form-control"
-                                   placeholder="Enter phone number" />
+    .mf-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--ss-ink);
+        margin-bottom: 7px;
+    }
 
-                            <span asp-validation-for="PhoneNumber"
-                                  class="text-danger">
-                            </span>
-                        </div>
+    .mf-label small {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--ss-muted);
+    }
 
-                        <div class="mb-3">
-                            <label asp-for="Bio"
-                                   class="form-label fw-semibold">
-                                Bio
-                            </label>
+    .mf .form-control {
+        height: 46px;
+        border: 1px solid #ddd9f3;
+        border-radius: 10px;
+        background: #fff;
+        font-size: 14px;
+        color: var(--ss-ink);
+    }
 
-                            <textarea asp-for="Bio"
-                                      class="form-control"
-                                      rows="4"
-                                      placeholder="Tell us about yourself"></textarea>
+    .mf textarea.form-control { height: auto; line-height: 1.65; resize: vertical; }
 
-                            <span asp-validation-for="Bio"
-                                  class="text-danger">
-                            </span>
-                        </div>
+    .mf .form-control::placeholder { color: #a3a1bd; }
 
-                        <div class="mb-3">
-                            <label asp-for="SkillToOffer"
-                                   class="form-label fw-semibold">
-                                Skill I Can Teach
-                            </label>
+    .mf .form-control:hover { border-color: #c4bff0; }
 
-                            <input asp-for="SkillToOffer"
-                                   class="form-control"
-                                   placeholder="Example: Python" />
+    .mf .form-control:focus {
+        border-color: var(--ss-primary);
+        box-shadow: 0 0 0 4px rgba(91, 75, 219, .14);
+    }
 
-                            <span asp-validation-for="SkillToOffer"
-                                  class="text-danger">
-                            </span>
-                        </div>
+    .mf .form-control.input-validation-error {
+        border-color: #d93838;
+        background: #fffafa;
+    }
 
-                        <div class="mb-4">
-                            <label asp-for="SkillToLearn"
-                                   class="form-label fw-semibold">
-                                Skill I Want To Learn
-                            </label>
+    .mf .form-control.input-validation-error:focus {
+        box-shadow: 0 0 0 4px rgba(217, 56, 56, .12);
+    }
 
-                            <input asp-for="SkillToLearn"
-                                   class="form-control"
-                                   placeholder="Example: Web Design" />
+    .mf-error {
+        display: block;
+        margin-top: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #d93838;
+    }
 
-                            <span asp-validation-for="SkillToLearn"
-                                  class="text-danger">
-                            </span>
-                        </div>
+    .mf-error:empty { display: none; }
 
-                        <div class="d-flex gap-2 justify-content-end">
+    .mf-summary {
+        background: #fdecec;
+        border: 1px solid #f5c2c2;
+        border-radius: 12px;
+        color: #b42c2c;
+        font-size: 14px;
+        font-weight: 600;
+        padding: 12px 16px;
+        margin: 18px 0 0;
+    }
 
-                            <a asp-controller="Members"
-                               asp-action="Index"
-                               class="btn btn-light px-4">
-                                Cancel
-                            </a>
+    .mf-summary.validation-summary-valid { display: none; }
+    .mf-summary ul { margin: 0; padding-left: 18px; }
 
-                            <button type="submit"
-                                    class="btn px-4"
-                                    style="background:#2b8a78;color:white;">
+    .mf-count { font-variant-numeric: tabular-nums; }
+
+    /* Suggestion chips */
+    .mf-chips {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .mf-chips-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--ss-muted);
+        margin-right: 2px;
+    }
+
+    .mf-chip {
+        border: 1px solid var(--ss-border);
+        background: #fff;
+        color: var(--ss-text);
+        border-radius: 30px;
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+    }
+
+    .mf-chip:hover {
+        background: var(--ss-primary-soft);
+        border-color: #cfc8f8;
+        color: var(--ss-primary);
+    }
+
+    /* Actions */
+    .mf-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 28px;
+        padding-top: 22px;
+        border-top: 1px solid var(--ss-border);
+    }
+
+    .mf-cancel {
+        display: inline-flex;
+        align-items: center;
+        background: #fff;
+        border: 1px solid var(--ss-border);
+        color: var(--ss-text);
+        font-size: 14px;
+        font-weight: 700;
+        padding: 11px 22px;
+        border-radius: 10px;
+        transition: background-color .2s ease, color .2s ease;
+    }
+
+    .mf-cancel:hover { background: var(--ss-bg); color: var(--ss-ink); }
+
+    .mf-save {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--ss-primary);
+        border: 0;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 700;
+        padding: 11px 24px;
+        border-radius: 10px;
+        transition: background-color .2s ease;
+    }
+
+    .mf-save:hover { background: var(--ss-primary-dark); }
+
+    /* ================= SIDE ================= */
+    @@media (min-width: 992px) {
+        .mf-side { position: sticky; top: 92px; }
+    }
+
+    .mf-panel {
+        background: #fff;
+        border: 1px solid var(--ss-border);
+        border-radius: 16px;
+        padding: 20px;
+    }
+
+    .mf-panel + .mf-panel { margin-top: 16px; }
+
+    .mf-panel-title {
+        font-size: 13px;
+        font-weight: 800;
+        margin: 0 0 14px;
+    }
+
+    .mf-progress-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--ss-text);
+        margin-bottom: 8px;
+    }
+
+    .mf-progress-top b { color: var(--ss-primary); font-size: 14px; }
+
+    .mf-bar {
+        height: 8px;
+        background: var(--ss-primary-soft);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .mf-bar span {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: linear-gradient(90deg, var(--ss-primary), var(--ss-accent));
+        border-radius: 10px;
+        transition: width .3s ease;
+    }
+
+    /* Preview card */
+    .pv {
+        border: 1px solid var(--ss-border);
+        border-radius: 14px;
+        padding: 16px;
+        background: #fff;
+    }
+
+    .pv-top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .pv-avatar {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        background: var(--ss-primary-soft);
+        color: var(--ss-primary);
+        font-size: 18px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .pv-id { min-width: 0; }
+
+    .pv-name {
+        font-size: 15px;
+        font-weight: 800;
+        margin: 0 0 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .pv-name.ph, .pv-mail.ph, .pv-bio.ph { color: #a3a1bd; }
+
+    .pv-name.ph { font-weight: 700; }
+
+    .pv-mail {
+        font-size: 12px;
+        color: var(--ss-muted);
+        margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .pv-bio {
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--ss-text);
+        margin: 0 0 12px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .pv-bio.ph { font-style: italic; }
+
+    .pv-skills {
+        border: 1px solid var(--ss-border);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 12px;
+    }
+
+    .pv-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    .pv-row + .pv-row { border-top: 1px solid var(--ss-border); }
+    .pv-row .k { color: var(--ss-muted); font-weight: 600; flex-shrink: 0; }
+
+    .pv-tag {
+        max-width: 60%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        border-radius: 6px;
+        padding: 2px 9px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .pv-tag.teach { background: var(--ss-primary-soft); color: var(--ss-primary-dark); }
+    .pv-tag.learn { background: var(--ss-accent-soft); color: #8a5a00; }
+    .pv-tag.none { color: #a3a1bd; font-weight: 600; padding: 2px 0; }
+
+    .pv-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--ss-muted);
+    }
+
+    .pv-status svg { width: 14px; height: 14px; }
+    .pv-status.ready { color: #8a5a00; }
+    .pv-status.ready svg { color: var(--ss-accent-dark); }
+
+    .mf-tips { list-style: none; padding: 0; margin: 0; }
+
+    .mf-tips li {
+        display: flex;
+        gap: 10px;
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--ss-text);
+    }
+
+    .mf-tips li + li { margin-top: 10px; }
+
+    .mf-tips svg {
+        width: 16px;
+        height: 16px;
+        color: var(--ss-primary);
+        flex-shrink: 0;
+        margin-top: 3px;
+    }
+
+    @@media (max-width: 767px) {
+        .mf-head { padding: 24px 0; }
+        .mf-card { padding: 4px 18px 22px; }
+        .mf-actions { flex-direction: column-reverse; }
+        .mf-cancel, .mf-save { width: 100%; justify-content: center; }
+    }
+
+    @@media (prefers-reduced-motion: reduce) {
+        .mf-bar span, .mf-chip { transition: none; }
+    }
+</style>
+
+<div class="mf">
+
+    <!-- PAGE HEADER -->
+    <section class="mf-head">
+        <div class="container">
+
+            <nav class="mf-crumb" aria-label="Breadcrumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <span>/</span>
+                <a asp-controller="Members" asp-action="Index">Members</a>
+                <span>/</span>
+                <strong>Add member</strong>
+            </nav>
+
+            <h1 class="mf-title">Add New Member</h1>
+            <p class="mf-sub">Create a new SkillSwap member profile.</p>
+
+        </div>
+    </section>
+
+    <div class="container mf-body">
+        <div class="row g-4">
+
+            <!-- FORM -->
+            <div class="col-lg-7">
+
+                <form asp-controller="Members" asp-action="Create" method="post" novalidate>
+
+                    <div class="mf-card">
+
+                        <div asp-validation-summary="ModelOnly" class="mf-summary"></div>
+
+                        <!-- 1. BASIC INFO -->
+                        <section class="mf-section">
+                            <div class="mf-section-head">
+                                <span class="mf-step">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4" /><path d="M4 20a8 8 0 0 1 16 0" /></svg>
+                                </span>
+                                <div>
+                                    <h2 class="mf-section-title">Basic information</h2>
+                                    <p class="mf-section-desc">How people will find and contact this member.</p>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Name" class="mf-label">Full Name</label>
+                                <input asp-for="Name" class="form-control" placeholder="Enter full name" autocomplete="name" />
+                                <span asp-validation-for="Name" class="mf-error"></span>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label asp-for="Email" class="mf-label">Email Address</label>
+                                    <input asp-for="Email" class="form-control" placeholder="Enter email address" autocomplete="email" />
+                                    <span asp-validation-for="Email" class="mf-error"></span>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label asp-for="PhoneNumber" class="mf-label">Phone Number</label>
+                                    <input asp-for="PhoneNumber" class="form-control" placeholder="Enter phone number" autocomplete="tel" />
+                                    <span asp-validation-for="PhoneNumber" class="mf-error"></span>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- 2. ABOUT -->
+                        <section class="mf-section">
+                            <div class="mf-section-head">
+                                <span class="mf-step">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14v16H5zM9 9h6M9 13h6M9 17h3" /></svg>
+                                </span>
+                                <div>
+                                    <h2 class="mf-section-title">About you</h2>
+                                    <p class="mf-section-desc">A short introduction helps others know who you are.</p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label asp-for="Bio" class="mf-label">
+                                    Bio
+                                    <small class="mf-count"><span id="bioCount">0</span> characters</small>
+                                </label>
+                                <textarea asp-for="Bio" class="form-control" rows="4" placeholder="Tell us about yourself"></textarea>
+                                <span asp-validation-for="Bio" class="mf-error"></span>
+                            </div>
+                        </section>
+
+                        <!-- 3. SKILLS -->
+                        <section class="mf-section">
+                            <div class="mf-section-head">
+                                <span class="mf-step">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h12l-3-3M17 17H5l3 3" /></svg>
+                                </span>
+                                <div>
+                                    <h2 class="mf-section-title">Skills</h2>
+                                    <p class="mf-section-desc">What you can teach, and what you want to learn in return.</p>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label asp-for="SkillToOffer" class="mf-label">Skill I Can Teach</label>
+                                <input asp-for="SkillToOffer" class="form-control" placeholder="Example: Python" />
+                                <span asp-validation-for="SkillToOffer" class="mf-error"></span>
+
+                                <div class="mf-chips">
+                                    <span class="mf-chips-label">Quick pick:</span>
+                                    @foreach (var s in suggestions)
+                                    {
+                                        <button type="button" class="mf-chip" data-target="SkillToOffer" data-value="@s">@s</button>
+                                    }
+                                </div>
+                            </div>
+
+                            <div>
+                                <label asp-for="SkillToLearn" class="mf-label">Skill I Want To Learn</label>
+                                <input asp-for="SkillToLearn" class="form-control" placeholder="Example: Web Design" />
+                                <span asp-validation-for="SkillToLearn" class="mf-error"></span>
+
+                                <div class="mf-chips">
+                                    <span class="mf-chips-label">Quick pick:</span>
+                                    @foreach (var s in suggestions)
+                                    {
+                                        <button type="button" class="mf-chip" data-target="SkillToLearn" data-value="@s">@s</button>
+                                    }
+                                </div>
+                            </div>
+                        </section>
+
+                        <div class="mf-actions">
+                            <a asp-controller="Members" asp-action="Index" class="mf-cancel">Cancel</a>
+                            <button type="submit" class="mf-save">
+                                <svg class="mf-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10" /></svg>
                                 Save Member
                             </button>
-
                         </div>
 
-                    </form>
+                    </div>
 
-                </div>
+                </form>
 
             </div>
+
+            <!-- SIDE: PROGRESS + PREVIEW -->
+            <aside class="col-lg-5">
+                <div class="mf-side">
+
+                    <div class="mf-panel">
+                        <h2 class="mf-panel-title">Profile completeness</h2>
+                        <div class="mf-progress-top">
+                            <span id="pgText">0 of 6 fields filled</span>
+                            <b id="pgPct">0%</b>
+                        </div>
+                        <div class="mf-bar"><span id="pgBar"></span></div>
+                    </div>
+
+                    <div class="mf-panel">
+                        <h2 class="mf-panel-title">Live preview</h2>
+
+                        <div class="pv">
+                            <div class="pv-top">
+                                <div class="pv-avatar" id="pvAvatar">?</div>
+                                <div class="pv-id">
+                                    <p class="pv-name ph" id="pvName">Full name</p>
+                                    <p class="pv-mail ph" id="pvMail">email@example.com</p>
+                                </div>
+                            </div>
+
+                            <p class="pv-bio ph" id="pvBio">No introduction has been added yet.</p>
+
+                            <div class="pv-skills">
+                                <div class="pv-row">
+                                    <span class="k">Can teach</span>
+                                    <span class="pv-tag none" id="pvOffer">Not specified</span>
+                                </div>
+                                <div class="pv-row">
+                                    <span class="k">Wants to learn</span>
+                                    <span class="pv-tag none" id="pvLearn">Not specified</span>
+                                </div>
+                            </div>
+
+                            <span class="pv-status" id="pvStatus">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h12l-3-3M17 17H5l3 3" /></svg>
+                                <span id="pvStatusText">Add both skills to be swap ready</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mf-panel">
+                        <h2 class="mf-panel-title">Tips for a good profile</h2>
+                        <ul class="mf-tips">
+                            <li>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10" /></svg>
+                                Add both a skill to teach and a skill to learn, so others can match with you.
+                            </li>
+                            <li>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10" /></svg>
+                                Keep the bio short and clear: who you are and what you enjoy.
+                            </li>
+                            <li>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10" /></svg>
+                                Use a working email address so swap requests reach you.
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+            </aside>
 
         </div>
     </div>
@@ -155,4 +650,87 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            var f = {
+                name: document.getElementById("Name"),
+                email: document.getElementById("Email"),
+                phone: document.getElementById("PhoneNumber"),
+                bio: document.getElementById("Bio"),
+                offer: document.getElementById("SkillToOffer"),
+                learn: document.getElementById("SkillToLearn")
+            };
+
+            var pv = {
+                avatar: document.getElementById("pvAvatar"),
+                name: document.getElementById("pvName"),
+                mail: document.getElementById("pvMail"),
+                bio: document.getElementById("pvBio"),
+                offer: document.getElementById("pvOffer"),
+                learn: document.getElementById("pvLearn"),
+                status: document.getElementById("pvStatus"),
+                statusText: document.getElementById("pvStatusText")
+            };
+
+            var pgText = document.getElementById("pgText");
+            var pgPct = document.getElementById("pgPct");
+            var pgBar = document.getElementById("pgBar");
+            var bioCount = document.getElementById("bioCount");
+
+            function val(el) { return el ? el.value.trim() : ""; }
+
+            function setText(el, value, placeholder) {
+                el.textContent = value || placeholder;
+                el.classList.toggle("ph", !value);
+            }
+
+            function setTag(el, value, kind) {
+                el.textContent = value || "Not specified";
+                el.className = "pv-tag " + (value ? kind : "none");
+            }
+
+            function update() {
+                var name = val(f.name), email = val(f.email), phone = val(f.phone);
+                var bio = val(f.bio), offer = val(f.offer), learn = val(f.learn);
+
+                setText(pv.name, name, "Full name");
+                setText(pv.mail, email, "email@example.com");
+                setText(pv.bio, bio, "No introduction has been added yet.");
+                pv.avatar.textContent = name ? name.charAt(0).toUpperCase() : "?";
+
+                setTag(pv.offer, offer, "teach");
+                setTag(pv.learn, learn, "learn");
+
+                var ready = offer && learn;
+                pv.status.classList.toggle("ready", !!ready);
+                pv.statusText.textContent = ready ? "Swap ready" : "Add both skills to be swap ready";
+
+                var filled = [name, email, phone, bio, offer, learn].filter(Boolean).length;
+                var pct = Math.round((filled / 6) * 100);
+                pgText.textContent = filled + " of 6 fields filled";
+                pgPct.textContent = pct + "%";
+                pgBar.style.width = pct + "%";
+
+                bioCount.textContent = f.bio ? f.bio.value.length : 0;
+            }
+
+            Object.keys(f).forEach(function (key) {
+                if (f[key]) f[key].addEventListener("input", update);
+            });
+
+            document.querySelectorAll(".mf-chip").forEach(function (chip) {
+                chip.addEventListener("click", function () {
+                    var target = document.getElementById(chip.dataset.target);
+                    if (!target) return;
+                    target.value = chip.dataset.value;
+                    target.dispatchEvent(new Event("input", { bubbles: true }));
+                    target.focus();
+                });
+            });
+
+            update();
+        });
+    </script>
 }

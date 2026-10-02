@@ -1,206 +1,172 @@
+@using SkillSwap.Models
+
 @{
-ViewData["Title"] = "New Swap Request";
+    ViewData["Title"] = "New Swap Request";
 
-var users = ViewBag.Users as IEnumerable<SkillSwap.Models.User>;
-var skills = ViewBag.Skills as IEnumerable<SkillSwap.Models.Skill>;
-
+    var receiver = ViewBag.Receiver as SkillSwap.Models.User;
+    var skills = ViewBag.Skills as IEnumerable<SkillSwap.Models.Skill>;
 }
 
 <div class="container py-5">
 
-<div class="row justify-content-center">
+    <div class="row justify-content-center">
 
-    <div class="col-lg-8">
+        <div class="col-lg-8">
 
-        <div class="text-center mb-4">
+            <div class="text-center mb-4">
 
-            <div style="color:#2b8a78;font-size:12px;font-weight:700;letter-spacing:2px;">
-                SKILLSWAP
-            </div>
+                <div style="color:#2b8a78;font-size:12px;font-weight:700;letter-spacing:2px;">
+                    SKILLSWAP
+                </div>
 
-            <h1 class="fw-bold mt-2" style="color:#173f3b;">
-                New Skill Exchange
-            </h1>
+                <h1 class="fw-bold mt-2" style="color:#173f3b;">
+                    New Skill Exchange
+                </h1>
 
-            <p class="text-muted">
-                Choose members and skills for your exchange.
-            </p>
-
-        </div>
-
-        <div class="card border-0 shadow-sm rounded-4">
-
-            <div class="card-body p-4 p-md-5">
-
-                @if (!ViewData.ModelState.IsValid)
+                @if (receiver != null)
                 {
-                    <div asp-validation-summary="All"
-                         class="alert alert-danger">
-                    </div>
+                    <p class="text-muted">
+                        Send a skill exchange request to
+                        <strong>@receiver.FullName</strong>.
+                    </p>
                 }
 
-                <form asp-action="Create" method="post">
+            </div>
 
-                    @Html.AntiForgeryToken()
+            <div class="card border-0 shadow-sm rounded-4">
 
-                    <h5 class="fw-bold mb-3" style="color:#173f3b;">
-                        Members
-                    </h5>
+                <div class="card-body p-4 p-md-5">
 
-                    <div class="row g-4 mb-4">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div asp-validation-summary="All"
+                             class="alert alert-danger">
+                        </div>
+                    }
 
-                        <div class="col-md-6">
+                    <form asp-action="Create" method="post">
 
-                            <label class="form-label fw-semibold">
-                                Sender
-                            </label>
+                        @Html.AntiForgeryToken()
 
-                            <select name="senderId"
-                                    class="form-select"
-                                    required>
+                        <input type="hidden"
+                               name="receiverId"
+                               value="@receiver?.Id" />
 
-                                <option value="">
-                                    Select sender
-                                </option>
+                        <h5 class="fw-bold mb-3" style="color:#173f3b;">
+                            Exchange With
+                        </h5>
 
-                                @if (users != null)
-                                {
-                                    foreach (var user in users)
-                                    {
-                                        <option value="@user.Id">
-                                            @user.FullName
-                                        </option>
-                                    }
-                                }
+                        <div class="p-3 rounded-3 mb-4"
+                             style="background:#eaf6f2;">
 
-                            </select>
+                            <div class="fw-semibold"
+                                 style="color:#173f3b;">
+                                👤 @receiver?.FullName
+                            </div>
+
+                            <small class="text-muted">
+                                @receiver?.Email
+                            </small>
 
                         </div>
 
-                        <div class="col-md-6">
+                        <h5 class="fw-bold mb-3" style="color:#173f3b;">
+                            Skills
+                        </h5>
 
-                            <label class="form-label fw-semibold">
-                                Receiver
-                            </label>
+                        <div class="row g-4 mb-4">
 
-                            <select name="receiverId"
-                                    class="form-select"
-                                    required>
+                            <div class="col-md-6">
 
-                                <option value="">
-                                    Select receiver
-                                </option>
+                                <label class="form-label fw-semibold">
+                                    Skill I Can Teach
+                                </label>
 
-                                @if (users != null)
-                                {
-                                    foreach (var user in users)
+                                <select name="offeredSkillId"
+                                        class="form-select"
+                                        required>
+
+                                    <option value="">
+                                        Select skill
+                                    </option>
+
+                                    @if (skills != null)
                                     {
-                                        <option value="@user.Id">
-                                            @user.FullName
-                                        </option>
+                                        foreach (var skill in skills)
+                                        {
+                                            <option value="@skill.Id">
+                                                @skill.Name
+                                            </option>
+                                        }
                                     }
-                                }
 
-                            </select>
+                                </select>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label class="form-label fw-semibold">
+                                    Skill I Want To Learn
+                                </label>
+
+                                <select name="requestedSkillId"
+                                        class="form-select"
+                                        required>
+
+                                    <option value="">
+                                        Select skill
+                                    </option>
+
+                                    @if (skills != null)
+                                    {
+                                        foreach (var skill in skills)
+                                        {
+                                            <option value="@skill.Id">
+                                                @skill.Name
+                                            </option>
+                                        }
+                                    }
+
+                                </select>
+
+                            </div>
 
                         </div>
 
-                    </div>
-
-                    <h5 class="fw-bold mb-3" style="color:#173f3b;">
-                        Skills
-                    </h5>
-
-                    <div class="row g-4 mb-4">
-
-                        <div class="col-md-6">
+                        <div class="mb-4">
 
                             <label class="form-label fw-semibold">
-                                Skill I Can Teach
+                                Message
                             </label>
 
-                            <select name="offeredSkillId"
-                                    class="form-select"
-                                    required>
-
-                                <option value="">
-                                    Select skill
-                                </option>
-
-                                @if (skills != null)
-                                {
-                                    foreach (var skill in skills)
-                                    {
-                                        <option value="@skill.Id">
-                                            @skill.Name
-                                        </option>
-                                    }
-                                }
-
-                            </select>
+                            <textarea name="message"
+                                      class="form-control"
+                                      rows="5"
+                                      maxlength="500"
+                                      placeholder="Write a message about your skill exchange..."></textarea>
 
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="d-flex justify-content-between">
 
-                            <label class="form-label fw-semibold">
-                                Skill I Want To Learn
-                            </label>
+                            <a asp-controller="Members"
+                               asp-action="Index"
+                               class="btn btn-light px-4">
+                                Cancel
+                            </a>
 
-                            <select name="requestedSkillId"
-                                    class="form-select"
-                                    required>
-
-                                <option value="">
-                                    Select skill
-                                </option>
-
-                                @if (skills != null)
-                                {
-                                    foreach (var skill in skills)
-                                    {
-                                        <option value="@skill.Id">
-                                            @skill.Name
-                                        </option>
-                                    }
-                                }
-
-                            </select>
+                            <button type="submit"
+                                    class="btn px-4"
+                                    style="background:#2b8a78;color:white;">
+                                📤 Send Request
+                            </button>
 
                         </div>
 
-                    </div>
+                    </form>
 
-                    <div class="mb-4">
-
-                        <label class="form-label fw-semibold">
-                            Message
-                        </label>
-
-                        <textarea name="message"
-                                  class="form-control"
-                                  rows="5"
-                                  maxlength="500"
-                                  placeholder="Write a message about your skill exchange..."></textarea>
-
-                    </div>
-
-                    <div class="d-flex justify-content-between">
-
-                        <a asp-action="Index"
-                           class="btn btn-light px-4">
-                            Cancel
-                        </a>
-
-                        <button type="submit"
-                                class="btn px-4"
-                                style="background:#2b8a78;color:white;">
-                            Send Request
-                        </button>
-
-                    </div>
-
-                </form>
+                </div>
 
             </div>
 
@@ -210,4 +176,10 @@ var skills = ViewBag.Skills as IEnumerable<SkillSwap.Models.Skill>;
 
 </div>
 
-</div>
+@section Scripts {
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+}

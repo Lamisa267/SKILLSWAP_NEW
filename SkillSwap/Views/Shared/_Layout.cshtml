@@ -1,429 +1,445 @@
-﻿<!DOCTYPE html>
+﻿@{
+    var signedIn = User?.Identity?.IsAuthenticated ?? false;
+    var ctrl = (ViewContext.RouteData.Values["controller"] as string) ?? "";
+    var act = (ViewContext.RouteData.Values["action"] as string) ?? "";
 
+    var displayName = "";
+    var isAdmin = false;
+
+    if (signedIn)
+    {
+        displayName = User.FindFirst("FullName")?.Value
+            ?? User.FindFirst("Name")?.Value
+            ?? User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value
+            ?? User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value
+            ?? User.Identity?.Name
+            ?? "Member";
+
+        if (displayName.Contains("@"))
+        {
+            displayName = displayName.Substring(0, displayName.IndexOf('@'));
+        }
+
+        isAdmin = User.IsInRole("Admin")
+            || string.Equals(User.FindFirst("IsAdmin")?.Value, "true", StringComparison.OrdinalIgnoreCase);
+    }
+
+    var userInitial = string.IsNullOrWhiteSpace(displayName) ? "?" : displayName.Trim().Substring(0, 1).ToUpper();
+
+    string Active(string c, string a = null) =>
+        string.Equals(ctrl, c, StringComparison.OrdinalIgnoreCase) &&
+        (a == null || string.Equals(act, a, StringComparison.OrdinalIgnoreCase)) ? "active" : "";
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    ```
     <title>@ViewData["Title"] - SkillSwap</title>
-
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
-
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <style>
+            :root {
+                /* navbar */
+                --sw-green: #0b7a5f;
+                --sw-green-dark: #086247;
+                --sw-soft: #e4f4ee;
+                --sw-ink: #1d2a44;
+                /* baki sob page (Home, Skills, Members, SwapRequests, Dashboard) */
+                --ss-primary: #0b7a5f;
+                --ss-primary-dark: #086247;
+                --ss-primary-soft: #e4f4ee;
+                --ss-accent: #ffb627;
+                --ss-accent-dark: #f0a500;
+                --ss-accent-soft: #fff4d6;
+                --ss-ink: #1d2a44;
+                --ss-text: #4a5668;
+                --ss-muted: #6b7a8a;
+                --ss-border: #e1ece7;
+                --ss-bg: #f6faf8;
+                --ss-surface: #ffffff;
+                --ss-card: #ffffff;
+                --ss-line: #e1ece7;
+                --ss-radius: 16px;
+                --ss-shadow: 0 10px 30px rgba(29, 42, 68, .08);
+            }
+
+            html {
+                position: relative;
+                min-height: 100%;
+            }
 
             body {
+                font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+                color: var(--sw-ink);
+                background: #fff;
                 margin: 0;
-                font-family: Arial, Helvetica, sans-serif;
-                background: #f7faf9;
-                color: #173f3b;
+                font-size: 16px;
+                line-height: 1.6;
             }
 
-            /* NAVBAR */
-
-            .skillswap-navbar {
-                background: #ffffff;
-                border-bottom: 1px solid #e7eeee;
-                padding: 14px 0;
-                box-shadow: 0 2px 12px rgba(30, 70, 65, 0.05);
+            h1, h2, h3, h4, h5, h6 {
+                color: var(--sw-ink);
             }
 
-            .brand {
-                color: #267a6b !important;
-                font-size: 24px;
-                font-weight: 750;
+            a {
                 text-decoration: none;
-                letter-spacing: -0.5px;
             }
 
-                .brand span {
-                    color: #173f3b;
+            /* ===== NAVBAR ===== */
+            .sw-nav {
+                background: #fff;
+                position: sticky;
+                top: 0;
+                z-index: 1000;
+                box-shadow: 0 1px 0 #eef2f0;
+            }
+
+                .sw-nav .container {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 18px;
+                    min-height: 66px;
                 }
 
-            .nav-link {
-                color: #566765 !important;
-                font-size: 15px;
-                font-weight: 600;
-                margin-left: 8px;
-                padding: 9px 14px !important;
-                border-radius: 8px;
-                transition: 0.2s;
+            .sw-brand {
+                display: inline-flex;
+                align-items: center;
+                gap: 12px;
+                font-size: 25px;
+                font-weight: 800;
+                letter-spacing: -.5px;
+                color: var(--sw-green);
             }
 
-                .nav-link:hover {
-                    background: #eaf5f2;
-                    color: #267a6b !important;
+            .sw-logo {
+                width: 40px;
+                height: 40px;
+                border-radius: 11px;
+                background: var(--sw-green);
+                color: #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+                .sw-logo svg {
+                    width: 24px;
+                    height: 24px;
                 }
 
-                .nav-link.active {
-                    background: #eaf5f2;
-                    color: #267a6b !important;
-                }
-
-            .join-btn {
-                background: #2b8a78;
-                color: white !important;
-                padding: 9px 18px !important;
-                border-radius: 9px;
-                margin-left: 10px;
-            }
-
-                .join-btn:hover {
-                    background: #216c60;
-                    color: white !important;
-                }
-
-            /* AUTH BUTTONS */
-
-            .login-btn {
-                border: 1px solid #2b8a78;
-                color: #267a6b !important;
-                padding: 8px 16px !important;
-                border-radius: 9px;
-                margin-left: 10px;
-            }
-
-                .login-btn:hover {
-                    background: #eaf5f2;
-                }
-
-            .register-btn {
-                background: #2b8a78;
-                color: white !important;
-                padding: 9px 16px !important;
-                border-radius: 9px;
-                margin-left: 8px;
-            }
-
-                .register-btn:hover {
-                    background: #216c60;
-                    color: white !important;
-                }
-
-            .user-name {
-                color: #267a6b;
-                font-weight: 700;
-                padding: 9px 12px;
-                margin-left: 10px;
-            }
-
-            .logout-btn {
-                border: none;
-                background: transparent;
-                color: #566765;
-                font-size: 15px;
-                font-weight: 600;
-                padding: 9px 14px;
-                border-radius: 8px;
-                margin-left: 5px;
-            }
-
-                .logout-btn:hover {
-                    background: #eaf5f2;
-                    color: #267a6b;
-                }
-
-            /* MAIN */
-
-            main {
-                min-height: calc(100vh - 145px);
-            }
-
-            /* FOOTER */
-
-            .skillswap-footer {
-                background: #173f3b;
-                color: #dceae7;
-                padding: 28px 0;
-                margin-top: 40px;
-            }
-
-            .footer-brand {
-                color: #ffffff;
-                font-size: 20px;
-                font-weight: 700;
-                margin-bottom: 6px;
-            }
-
-            .footer-text {
-                color: #b9cdca;
-                font-size: 14px;
+            .sw-links {
+                display: flex;
+                align-items: center;
+                gap: 36px;
+                list-style: none;
                 margin: 0;
+                padding: 0;
             }
 
-            .footer-copy {
-                color: #9db6b1;
+                .sw-links a {
+                    position: relative;
+                    display: block;
+                    padding: 22px 0;
+                    font-size: 15px;
+                    font-weight: 500;
+                    color: #3d4a5c;
+                    transition: color .2s ease;
+                }
+
+                    .sw-links a:hover {
+                        color: var(--sw-green);
+                    }
+
+                    .sw-links a.active {
+                        color: var(--sw-green);
+                        font-weight: 700;
+                    }
+
+                        .sw-links a.active::after {
+                            content: "";
+                            position: absolute;
+                            left: 50%;
+                            bottom: 0;
+                            width: 22px;
+                            height: 3px;
+                            border-radius: 3px 3px 0 0;
+                            background: var(--sw-green);
+                            transform: translateX(-50%);
+                        }
+
+            .sw-right {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+            }
+
+            .sw-search {
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: var(--sw-green);
+                border-radius: 50%;
+                transition: background-color .2s ease;
+            }
+
+                .sw-search:hover {
+                    background: var(--sw-soft);
+                    color: var(--sw-green);
+                }
+
+                .sw-search svg {
+                    width: 22px;
+                    height: 22px;
+                }
+
+            .sw-btn {
+                display: inline-flex;
+                align-items: center;
+                font-size: 15px;
+                font-weight: 700;
+                padding: 10px 22px;
+                border-radius: 9px;
+                border: 1.5px solid var(--sw-green);
+                background: none;
+                cursor: pointer;
+                transition: background-color .2s ease;
+            }
+
+                .sw-btn.line {
+                    color: var(--sw-green);
+                    background: #fff;
+                }
+
+                    .sw-btn.line:hover {
+                        background: var(--sw-soft);
+                        color: var(--sw-green-dark);
+                    }
+
+                .sw-btn.solid {
+                    background: var(--sw-green);
+                    color: #fff;
+                }
+
+                    .sw-btn.solid:hover {
+                        background: var(--sw-green-dark);
+                        color: #fff;
+                    }
+
+            .sw-toggle {
+                display: none;
+                width: 42px;
+                height: 42px;
+                border: 1px solid #d9e6e0;
+                border-radius: 9px;
+                background: #fff;
+                color: var(--sw-green);
+                align-items: center;
+                justify-content: center;
+            }
+
+                .sw-toggle svg {
+                    width: 22px;
+                    height: 22px;
+                }
+
+            /* ===== LOGGED IN USER ===== */
+            .sw-user {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .sw-avatar {
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                background: var(--sw-green);
+                color: #fff;
+                font-size: 15px;
+                font-weight: 800;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 0 0 3px var(--sw-soft);
+            }
+
+            .sw-hello {
+                font-size: 14px;
+                color: #3d4a5c;
+                white-space: nowrap;
+            }
+
+                .sw-hello b {
+                    color: var(--sw-ink);
+                    font-weight: 800;
+                }
+
+            .sw-admin {
+                background: var(--ss-accent-soft);
+                color: #8a5a00;
+                border: 1px solid #f6dd9a;
+                font-size: 11px;
+                font-weight: 800;
+                padding: 3px 10px;
+                border-radius: 30px;
+            }
+
+            @@media (max-width: 1199px) {
+                .sw-hello {
+                    display: none;
+                }
+            }
+
+            @@media (max-width: 991px) {
+                .sw-toggle {
+                    display: inline-flex;
+                }
+
+                .sw-nav .container {
+                    flex-wrap: wrap;
+                    padding-top: 10px;
+                    padding-bottom: 10px;
+                }
+
+                .sw-menu {
+                    display: none;
+                    width: 100%;
+                    order: 3;
+                    padding-bottom: 12px;
+                }
+
+                    .sw-menu.open {
+                        display: block;
+                    }
+
+                .sw-links {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 0;
+                }
+
+                    .sw-links a {
+                        padding: 11px 0;
+                    }
+
+                        .sw-links a.active::after {
+                            display: none;
+                        }
+
+                .sw-right {
+                    margin-top: 10px;
+                    flex-wrap: wrap;
+                }
+
+                .sw-hello {
+                    display: inline;
+                }
+            }
+
+            /* ===== FOOTER ===== */
+            .sw-footer {
+                background: #fff;
+                border-top: 1px solid #e6eeea;
+                padding: 22px 0;
                 font-size: 13px;
-                text-align: right;
+                color: #5d6b7a;
             }
 
+                .sw-footer .container {
+                    display: flex;
+                    justify-content: space-between;
+                    flex-wrap: wrap;
+                    gap: 8px;
+                }
+
+                .sw-footer a {
+                    color: var(--sw-green);
+                    font-weight: 600;
+                }
     </style>
-    ```
-
 </head>
-
 <body>
 
-    ```
-    <!-- NAVBAR -->
-
-    <header>
-
-        <nav class="navbar navbar-expand-lg skillswap-navbar">
-
-            <div class="container">
-
-                <!-- LOGO -->
-
-                <a class="brand"
-                   asp-controller="Home"
-                   asp-action="Index">
-                    Skill<span>Swap</span>
-                </a>
-
-
-                <!-- MOBILE MENU BUTTON -->
-
-                <button class="navbar-toggler"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#mainNavbar"
-                        aria-controls="mainNavbar"
-                        aria-expanded="false"
-                        aria-label="Toggle navigation">
-
-                    <span class="navbar-toggler-icon"></span>
-
-                </button>
-
-
-                <!-- NAVIGATION -->
-
-                <div class="collapse navbar-collapse"
-                     id="mainNavbar">
-
-                    <ul class="navbar-nav ms-auto align-items-lg-center">
-
-                        <!-- HOME -->
-
-                        <li class="nav-item">
-
-                            <a class="nav-link"
-                               asp-controller="Home"
-                               asp-action="Index">
-
-                                Home
-
-                            </a>
-
-                        </li>
-
-
-                        <!-- SKILLS -->
-
-                        <li class="nav-item">
-
-                            <a class="nav-link"
-                               asp-controller="Skills"
-                               asp-action="Index">
-
-                                Skills
-
-                            </a>
-
-                        </li>
-
-
-                        <!-- MEMBERS -->
-
-                        <li class="nav-item">
-
-                            <a class="nav-link"
-                               asp-controller="Members"
-                               asp-action="Index">
-
-                                Members
-
-                            </a>
-
-                        </li>
-
-
-                        <!-- SWAP REQUESTS -->
-
-                        <li class="nav-item">
-
-                            <a class="nav-link"
-                               asp-controller="SwapRequests"
-                               asp-action="Index">
-
-                                Skill Exchange
-
-                            </a>
-
-                        </li>
-
-
-                        <!-- ABOUT -->
-
-                        <li class="nav-item">
-
-                            <a class="nav-link"
-                               asp-controller="Home"
-                               asp-action="About">
-
-                                About
-
-                            </a>
-
-                        </li>
-
-
-                        @if (User.Identity != null && User.Identity.IsAuthenticated)
-                        {
-                            <!-- LOGGED IN USER -->
-
-                            <li class="nav-item">
-
-                                <span class="user-name">
-                                    Hello, @User.Identity.Name
-                                </span>
-
-                            </li>
-
-
-                            <!-- LOGOUT -->
-
-                            <li class="nav-item">
-
-                                <form asp-controller="Account"
-                                      asp-action="Logout"
-                                      method="post"
-                                      class="d-inline">
-
-                                    @Html.AntiForgeryToken()
-
-                                    <button type="submit"
-                                            class="logout-btn">
-
-                                        Logout
-
-                                    </button>
-
-                                </form>
-
-                            </li>
-                        }
-                        else
-                        {
-                            <!-- LOGIN -->
-
-                            <li class="nav-item">
-
-                                <a class="nav-link login-btn"
-                                   asp-controller="Account"
-                                   asp-action="Login">
-
-                                    Login
-
-                                </a>
-
-                            </li>
-
-
-                            <!-- REGISTER -->
-
-                            <li class="nav-item">
-
-                                <a class="nav-link register-btn"
-                                   asp-controller="Account"
-                                   asp-action="Register">
-
-                                    Register
-
-                                </a>
-
-                            </li>
-                        }
-
-
-                        <!-- JOIN -->
-
-                        <li class="nav-item">
-
-                            <a class="nav-link join-btn"
-                               asp-controller="Members"
-                               asp-action="Create">
-
-                                + Join SkillSwap
-
-                            </a>
-
-                        </li>
-
-                    </ul>
-
-                </div>
-
-            </div>
-
-        </nav>
-
-    </header>
-
-
-    <!-- MAIN CONTENT -->
-
-    <main role="main">
-
-        @RenderBody()
-
-    </main>
-
-
-    <!-- FOOTER -->
-
-    <footer class="skillswap-footer">
-
+    <header class="sw-nav">
         <div class="container">
 
-            <div class="row align-items-center">
+            <a asp-controller="Home" asp-action="Index" class="sw-brand">
+                <span class="sw-logo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a8 8 0 0 1 14-4l2 2M20 4v5h-5M20 13a8 8 0 0 1-14 4l-2-2M4 20v-5h5" /></svg>
+                </span>
+                <span>SkillSwap</span>
+            </a>
 
-                <div class="col-md-7">
+            <button class="sw-toggle" type="button" aria-label="Menu" aria-controls="swMenu" aria-expanded="false" onclick="var m=document.getElementById('swMenu');var o=m.classList.toggle('open');this.setAttribute('aria-expanded',o);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+            </button>
 
-                    <div class="footer-brand">
-                        SkillSwap
-                    </div>
+            <div class="sw-menu d-lg-flex align-items-center justify-content-between flex-grow-1" id="swMenu">
 
-                    <p class="footer-text">
-                        Learn skills. Share knowledge. Grow together.
-                    </p>
+                <ul class="sw-links mx-lg-auto">
+                    <li><a asp-controller="Home" asp-action="Index" class="@(Active("Home", "Index"))">Home</a></li>
+                    <li><a asp-controller="Skills" asp-action="Index" class="@(Active("Skills"))">Skills</a></li>
+                    <li><a asp-controller="Members" asp-action="Index" class="@(Active("Members"))">Members</a></li>
+                    <li><a asp-controller="SwapRequests" asp-action="Index" class="@(Active("SwapRequests"))">Skill Exchange</a></li>
+                    <li><a asp-controller="Home" asp-action="About" class="@(Active("Home", "About"))">About</a></li>
+                    @if (signedIn)
+                    {
+                        <li><a asp-controller="Dashboard" asp-action="Index" class="@(Active("Dashboard"))">Dashboard</a></li>
+                    }
+                </ul>
 
+                <div class="sw-right">
+                    <a asp-controller="Members" asp-action="Index" class="sw-search" aria-label="Search members">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+                    </a>
+
+                    @if (signedIn)
+                    {
+                        <div class="sw-user" title="@displayName">
+                            <span class="sw-avatar">@userInitial</span>
+                            <span class="sw-hello">Hello, <b>@displayName</b></span>
+                            @if (isAdmin)
+                            {
+                                <span class="sw-admin">Admin</span>
+                            }
+                        </div>
+
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                            <button type="submit" class="sw-btn line">Logout</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Login" class="sw-btn line">Sign In</a>
+                        <a asp-controller="Account" asp-action="Register" class="sw-btn solid">Register</a>
+                    }
                 </div>
-
-                <div class="col-md-5">
-
-                    <div class="footer-copy">
-                        © @DateTime.Now.Year SkillSwap. All rights reserved.
-                    </div>
-
-                </div>
-
             </div>
 
         </div>
+    </header>
 
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <footer class="sw-footer">
+        <div class="container">
+            <span>&copy; @DateTime.Now.Year SkillSwap. All rights reserved.</span>
+            <a asp-controller="Home" asp-action="About">About SkillSwap</a>
+        </div>
     </footer>
 
-
-    <!-- BOOTSTRAP JS -->
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
-    </script>
-
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
-    ```
-
 </body>
 </html>

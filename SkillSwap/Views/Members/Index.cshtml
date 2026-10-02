@@ -1,374 +1,1028 @@
-```cshtml
 @model IEnumerable<SkillSwap.Models.Member>
 
 @{
     ViewData["Title"] = "Members";
+
+    var members = Model?.ToList() ?? new List<SkillSwap.Models.Member>();
+    var tones = new[] { "violet", "amber", "pink" };
+
+    var swapReadyCount = members.Count(m =>
+        !string.IsNullOrWhiteSpace(m.SkillToOffer) && !string.IsNullOrWhiteSpace(m.SkillToLearn));
+
+    var distinctSkills = members
+        .Where(m => !string.IsNullOrWhiteSpace(m.SkillToOffer))
+        .Select(m => m.SkillToOffer.Trim().ToLower())
+        .Distinct()
+        .Count();
+
+    IEnumerable<KeyValuePair<string, int>> TopSkills(Func<SkillSwap.Models.Member, string?> pick) =>
+        members
+            .Select(pick)
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Select(s => s!.Trim())
+            .GroupBy(s => s.ToLower())
+            .OrderByDescending(g => g.Count())
+            .Take(6)
+            .Select(g => new KeyValuePair<string, int>(g.First(), g.Count()));
+
+    var offerOptions = TopSkills(m => m.SkillToOffer).ToList();
+    var learnOptions = TopSkills(m => m.SkillToLearn).ToList();
 }
 
 <style>
-    .members-page {
-        background: #f7faf9;
-        min-height: 100vh;
-        padding: 50px 0 70px;
+    .mp { background: var(--ss-bg); }
+
+    /* ================= PAGE HEADER ================= */
+    .mp-head {
+        background: #fff;
+        border-bottom: 1px solid var(--ss-border);
+        padding: 30px 0 28px;
     }
 
-    .members-header {
+    .mp-crumb {
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        margin-bottom: 40px;
-    }
-
-    .page-label {
-        color: #2b8a78;
+        gap: 8px;
         font-size: 13px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1.5px;
-        margin-bottom: 8px;
+        color: var(--ss-muted);
+        margin-bottom: 14px;
     }
 
-    .members-title {
-        color: #173f3b;
-        font-size: 40px;
-        font-weight: 700;
-        margin: 0 0 8px;
+    .mp-crumb a { color: var(--ss-muted); font-weight: 600; }
+    .mp-crumb a:hover { color: var(--ss-primary); }
+    .mp-crumb strong { color: var(--ss-ink); font-weight: 700; }
+
+    .mp-title {
+        font-size: clamp(28px, 3.4vw, 36px);
+        font-weight: 800;
+        letter-spacing: -0.8px;
+        margin: 0 0 6px;
     }
 
-    .members-subtitle {
-        color: #71817f;
-        font-size: 16px;
+    .mp-sub {
+        color: var(--ss-text);
+        font-size: 15px;
+        line-height: 1.65;
         margin: 0;
+        max-width: 560px;
     }
 
-    .add-member-btn {
-        display: inline-block;
-        background: #2b8a78;
-        color: white;
-        padding: 13px 22px;
-        border-radius: 10px;
-        text-decoration: none;
+    .mp-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 22px;
+        margin-top: 16px;
+        font-size: 13px;
+        color: var(--ss-text);
+    }
+
+    .mp-stats b { color: var(--ss-ink); font-weight: 800; margin-right: 4px; }
+
+    .mp-add {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--ss-primary);
+        color: #fff;
         font-size: 14px;
         font-weight: 700;
-        transition: 0.2s;
+        padding: 11px 20px;
+        border-radius: 10px;
+        transition: background-color .2s ease;
+        white-space: nowrap;
     }
 
-    .add-member-btn:hover {
-        background: #216c60;
-        color: white;
-        text-decoration: none;
+    .mp-add:hover { background: var(--ss-primary-dark); color: #fff; }
+
+    .mp-ico { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* ================= BODY ================= */
+    .mp-body { padding: 32px 12px 80px; }
+
+    .mp-alert {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #e3f8ea;
+        border: 1px solid #bfe9cd;
+        color: #15803d;
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 24px;
     }
 
-    .member-card {
-        background: white;
-        border: 1px solid #e5eeeb;
-        border-radius: 18px;
-        padding: 25px;
-        height: 100%;
-        box-shadow: 0 6px 20px rgba(30, 70, 65, 0.07);
-        transition: 0.25s;
+    /* ================= SIDEBAR ================= */
+    .mp-panel {
+        background: #fff;
+        border: 1px solid var(--ss-border);
+        border-radius: 16px;
+        padding: 20px;
     }
 
-    .member-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 30px rgba(30, 70, 65, 0.13);
+    @@media (min-width: 992px) {
+        .mp-side { position: sticky; top: 92px; }
     }
 
-    .member-avatar {
-        width: 65px;
-        height: 65px;
-        border-radius: 50%;
-        background: #e0f2ed;
-        color: #277a6c;
+    .mp-filter-toggle {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 25px;
-        font-weight: 700;
-        margin-bottom: 17px;
-    }
-
-    .member-name {
-        color: #173f3b;
-        font-size: 21px;
-        font-weight: 700;
-        margin-bottom: 7px;
-    }
-
-    .member-email {
-        color: #7a8886;
+        gap: 8px;
+        background: #fff;
+        border: 1px solid var(--ss-border);
+        border-radius: 10px;
+        color: var(--ss-ink);
         font-size: 14px;
-        margin-bottom: 8px;
-    }
-
-    .member-phone {
-        color: #657471;
-        font-size: 14px;
-        margin-bottom: 17px;
-    }
-
-    .member-bio {
-        color: #5e6e6b;
-        font-size: 14px;
-        line-height: 1.6;
-        min-height: 45px;
-        margin-bottom: 22px;
-    }
-
-    .skill-section {
-        margin-bottom: 15px;
-    }
-
-    .skill-title {
-        color: #7b8987;
-        font-size: 11px;
         font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.7px;
-        margin-bottom: 7px;
+        padding: 11px 16px;
+        margin-bottom: 12px;
     }
 
-    .skill-badge {
-        display: inline-block;
-        padding: 7px 12px;
-        border-radius: 20px;
+    .mp-group + .mp-group {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--ss-border);
+    }
+
+    .mp-group-title {
         font-size: 13px;
+        font-weight: 800;
+        color: var(--ss-ink);
+        margin: 0 0 10px;
+    }
+
+    .mp-search { position: relative; }
+
+    .mp-search .mp-ico {
+        position: absolute;
+        left: 13px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--ss-muted);
+        pointer-events: none;
+    }
+
+    .mp-search input {
+        width: 100%;
+        height: 42px;
+        padding: 0 36px 0 38px;
+        border: 1px solid var(--ss-border);
+        border-radius: 10px;
+        background: #fff;
+        font-size: 14px;
+        color: var(--ss-ink);
+        outline: none;
+        transition: border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .mp-search input::placeholder { color: #a3a1bd; }
+
+    .mp-search input:focus {
+        border-color: var(--ss-primary);
+        box-shadow: 0 0 0 3px rgba(91, 75, 219, .14);
+    }
+
+    .mp-clear {
+        position: absolute;
+        right: 7px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 26px;
+        height: 26px;
+        border: 0;
+        border-radius: 50%;
+        background: var(--ss-primary-soft);
+        color: var(--ss-primary);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .mp-clear.show { display: flex; }
+    .mp-clear svg { width: 12px; height: 12px; }
+
+    .mp-opt {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        background: transparent;
+        border: 0;
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--ss-text);
+        text-align: left;
+        cursor: pointer;
+        transition: background-color .15s ease, color .15s ease;
+    }
+
+    .mp-opt span:first-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .mp-opt .n {
+        flex-shrink: 0;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--ss-muted);
+        background: var(--ss-bg);
+        border-radius: 20px;
+        padding: 2px 9px;
+    }
+
+    .mp-opt:hover { background: var(--ss-bg); color: var(--ss-ink); }
+
+    .mp-opt.active { background: var(--ss-primary-soft); color: var(--ss-primary); }
+    .mp-opt.active .n { background: #fff; color: var(--ss-primary); }
+
+    .mp-switch {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--ss-text);
+    }
+
+    .mp-switch .form-check-input { width: 2.4em; height: 1.3em; cursor: pointer; margin: 0; }
+
+    .mp-empty-opts { font-size: 13px; color: var(--ss-muted); margin: 0; }
+
+    /* ================= RESULTS BAR ================= */
+    .mp-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+    }
+
+    .mp-info { font-size: 14px; color: var(--ss-text); margin: 0; }
+    .mp-info b { color: var(--ss-ink); font-weight: 800; }
+
+    .mp-sort {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--ss-muted);
         font-weight: 600;
     }
 
-    .teach-skill {
-        background: #e2f4ef;
-        color: #267568;
-    }
-
-    .learn-skill {
-        background: #eef0fa;
-        color: #58679d;
-    }
-
-    .member-actions {
-        display: flex;
-        gap: 8px;
-        border-top: 1px solid #edf1ef;
-        margin-top: 20px;
-        padding-top: 16px;
-    }
-
-    .action-btn {
-        flex: 1;
-        text-align: center;
-        padding: 9px 5px;
-        border-radius: 8px;
-        text-decoration: none;
+    .mp-sort select {
+        height: 38px;
+        padding: 0 32px 0 12px;
+        border: 1px solid var(--ss-border);
+        border-radius: 10px;
+        background-color: #fff;
+        color: var(--ss-ink);
         font-size: 13px;
         font-weight: 700;
-        transition: 0.2s;
+        outline: none;
+        cursor: pointer;
     }
 
-    .view-btn {
-        background: #edf7f5;
-        color: #28796c;
+    .mp-sort select:focus {
+        border-color: var(--ss-primary);
+        box-shadow: 0 0 0 3px rgba(91, 75, 219, .14);
     }
 
-    .view-btn:hover {
-        background: #dcefe9;
-        color: #1f665b;
+    .mp-active {
+        display: none;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 16px;
     }
 
-    .edit-btn {
-        background: #f0f1f9;
-        color: #59679b;
-    }
+    .mp-active.show { display: flex; }
 
-    .edit-btn:hover {
-        background: #e1e3f2;
-        color: #4d5989;
-    }
-
-    .delete-btn {
-        background: #fff0f0;
-        color: #c35d5d;
-    }
-
-    .delete-btn:hover {
-        background: #ffe0e0;
-        color: #aa4b4b;
-    }
-
-    .empty-members {
-        background: white;
-        border: 1px solid #e5eeeb;
-        border-radius: 18px;
-        padding: 65px 25px;
-        text-align: center;
-        box-shadow: 0 6px 20px rgba(30, 70, 65, 0.07);
-    }
-
-    .empty-icon {
-        font-size: 45px;
-        margin-bottom: 15px;
-    }
-
-    .empty-members h3 {
-        color: #173f3b;
-        font-size: 24px;
+    .mp-tag-active {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--ss-primary-soft);
+        color: var(--ss-primary);
+        border: 0;
+        border-radius: 30px;
+        padding: 5px 8px 5px 12px;
+        font-size: 12px;
         font-weight: 700;
-        margin-bottom: 8px;
+        cursor: pointer;
     }
 
-    .empty-members p {
-        color: #7a8886;
-        margin-bottom: 22px;
+    .mp-tag-active svg { width: 12px; height: 12px; }
+    .mp-tag-active:hover { background: #e0dbff; }
+
+    .mp-clear-all {
+        background: transparent;
+        border: 0;
+        color: var(--ss-muted);
+        font-size: 12px;
+        font-weight: 700;
+        padding: 5px 6px;
+        cursor: pointer;
+    }
+
+    .mp-clear-all:hover { color: var(--ss-primary); }
+
+    /* ================= MEMBER CARD ================= */
+    .mc {
+        position: relative;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        border: 1px solid var(--ss-border);
+        border-radius: 16px;
+        padding: 20px;
+        transition: border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .mc:hover {
+        border-color: #cfc8f8;
+        box-shadow: 0 10px 30px rgba(29, 27, 58, .08);
+    }
+
+    .mc:has(.dropdown-menu.show) { z-index: 10; }
+
+    .mc-top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    .mc-avatar {
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 800;
+    }
+
+    .mc-avatar.violet { background: var(--ss-primary-soft); color: var(--ss-primary); }
+    .mc-avatar.amber  { background: var(--ss-accent-soft);  color: #a86a00; }
+    .mc-avatar.pink   { background: #ffe9f1;                color: #d6336c; }
+
+    .mc-id { min-width: 0; flex: 1; }
+
+    .mc-name {
+        font-size: 16px;
+        font-weight: 800;
+        line-height: 1.3;
+        margin: 0 0 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .mc-mail {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--ss-muted);
+        margin: 0;
+        min-width: 0;
+    }
+
+    .mc-mail span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mc-mail .mp-ico { width: 13px; height: 13px; }
+
+    .mc-more {
+        width: 34px;
+        height: 34px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--ss-muted);
+        transition: background-color .15s ease, color .15s ease;
+    }
+
+    .mc-more:hover, .mc-more.show { background: var(--ss-primary-soft); color: var(--ss-primary); }
+
+    .mc .dropdown-menu {
+        border: 1px solid var(--ss-border);
+        border-radius: 12px;
+        box-shadow: 0 14px 34px rgba(29, 27, 58, .14);
+        padding: 6px;
+        min-width: 150px;
+    }
+
+    .mc .dropdown-item {
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        padding: 8px 12px;
+        color: var(--ss-text);
+    }
+
+    .mc .dropdown-item:hover { background: var(--ss-primary-soft); color: var(--ss-primary); }
+    .mc .dropdown-item.danger { color: #c0392b; }
+    .mc .dropdown-item.danger:hover { background: #fdecec; color: #a52f23; }
+
+    .mc-bio {
+        font-size: 14px;
+        line-height: 1.65;
+        color: var(--ss-text);
+        margin: 0 0 16px;
+        min-height: 46px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .mc-bio.empty { color: #a3a1bd; font-style: italic; }
+
+    .mc-skills {
+        margin: auto 0 16px;
+        border: 1px solid var(--ss-border);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .mc-skill {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .mc-skill + .mc-skill { border-top: 1px solid var(--ss-border); }
+
+    .mc-skill dt { font-weight: 600; color: var(--ss-muted); margin: 0; flex-shrink: 0; }
+
+    .mc-skill dd { margin: 0; min-width: 0; }
+
+    .mc-tag {
+        display: inline-block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: middle;
+        border-radius: 6px;
+        padding: 3px 10px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .mc-tag.teach { background: var(--ss-primary-soft); color: var(--ss-primary-dark); }
+    .mc-tag.learn { background: var(--ss-accent-soft); color: #8a5a00; }
+    .mc-tag.none  { background: transparent; color: #a3a1bd; font-weight: 600; padding: 3px 0; }
+
+    .mc-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .mc-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 700;
+        min-width: 0;
+    }
+
+    .mc-status .mp-ico { width: 14px; height: 14px; }
+    .mc-status.ready { color: #8a5a00; }
+    .mc-status.ready .mp-ico { color: var(--ss-accent-dark); }
+    .mc-status.pending { color: var(--ss-muted); }
+    .mc-status span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .mc-view {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        background: var(--ss-primary);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 8px 16px;
+        border-radius: 9px;
+        transition: background-color .2s ease;
+    }
+
+    .mc-view:hover { background: var(--ss-primary-dark); color: #fff; }
+
+    /* ================= EMPTY STATES ================= */
+    .mp-none, .mp-empty {
+        background: #fff;
+        border: 1px dashed #cfc8f8;
+        border-radius: 16px;
+        text-align: center;
+        padding: 56px 24px;
+    }
+
+    .mp-none { display: none; margin-top: 16px; }
+
+    .mp-empty-ico {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--ss-primary-soft);
+        color: var(--ss-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+    }
+
+    .mp-empty-ico svg { width: 26px; height: 26px; }
+
+    .mp-none h3, .mp-empty h2 { font-size: 20px; font-weight: 800; margin: 0 0 6px; }
+    .mp-none p, .mp-empty p { color: var(--ss-text); font-size: 14px; margin: 0 auto 18px; max-width: 440px; line-height: 1.65; }
+
+    .mp-none button {
+        background: #fff;
+        border: 1px solid var(--ss-border);
+        color: var(--ss-primary);
+        font-size: 13px;
+        font-weight: 700;
+        border-radius: 10px;
+        padding: 9px 18px;
+    }
+
+    .mp-none button:hover { background: var(--ss-primary-soft); }
+
+    @@media (max-width: 767px) {
+        .mp-head { padding: 24px 0; }
+        .mp-add { width: 100%; justify-content: center; }
+        .mp-body { padding-top: 24px; }
+    }
+
+    @@media (prefers-reduced-motion: reduce) {
+        .mc, .mp-opt, .mc-view, .mp-add { transition: none; }
     }
 </style>
 
-<div class="members-page">
+<div class="mp">
 
-    <div class="container">
+    <!-- PAGE HEADER -->
+    <section class="mp-head">
+        <div class="container">
 
-        <div class="members-header">
+            <nav class="mp-crumb" aria-label="Breadcrumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <span>/</span>
+                <strong>Members</strong>
+            </nav>
 
-            <div>
-                <div class="page-label">
-                    SkillSwap Community
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3">
+                <div>
+                    <h1 class="mp-title">Members</h1>
+                    <p class="mp-sub">
+                        Discover learners and skill sharers in the SkillSwap community.
+                        Find someone who can teach what you want to learn.
+                    </p>
+
+                    @if (members.Any())
+                    {
+                        <div class="mp-stats">
+                            <span><b>@members.Count</b>members</span>
+                            <span><b>@swapReadyCount</b>ready to swap</span>
+                            <span><b>@distinctSkills</b>skills offered</span>
+                        </div>
+                    }
                 </div>
 
-                <h1 class="members-title">
-                    Our Members
-                </h1>
-
-                <p class="members-subtitle">
-                    Connect with people, share your skills and learn together.
-                </p>
+                <a asp-action="Create" class="mp-add">
+                    <svg class="mp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+                    Add Member
+                </a>
             </div>
 
-            <a asp-action="Create" class="add-member-btn">
-                + Add New Member
-            </a>
-
         </div>
+    </section>
+
+    <div class="container mp-body">
 
         @if (TempData["SuccessMessage"] != null)
         {
-            <div class="alert alert-success">
-                @TempData["SuccessMessage"]
+            <div class="mp-alert" role="status">
+                <svg class="mp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10" /></svg>
+                <span>@TempData["SuccessMessage"]</span>
             </div>
         }
 
-        @if (Model != null && Model.Any())
+        @if (members.Any())
         {
             <div class="row g-4">
 
-                @foreach (var member in Model)
-                {
-                    <div class="col-lg-4 col-md-6">
+                <!-- SIDEBAR FILTERS -->
+                <aside class="col-lg-3">
+                    <div class="mp-side">
 
-                        <div class="member-card">
+                        <button class="mp-filter-toggle d-lg-none" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#mpFilters"
+                                aria-expanded="false" aria-controls="mpFilters">
+                            <svg class="mp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18M6 12h12M10 19h4" /></svg>
+                            Filters
+                        </button>
 
-                            <div class="member-avatar">
-                                @member.Name.Substring(0, 1).ToUpper()
-                            </div>
+                        <div class="collapse d-lg-block" id="mpFilters">
+                            <div class="mp-panel">
 
-                            <div class="member-name">
-                                @member.Name
-                            </div>
-
-                            <div class="member-email">
-                                ✉ @member.Email
-                            </div>
-
-                            <div class="member-phone">
-                                ☎ @member.PhoneNumber
-                            </div>
-
-                            <div class="member-bio">
-                                @if (string.IsNullOrWhiteSpace(member.Bio))
-                                {
-                                    <span>No bio added yet.</span>
-                                }
-                                else
-                                {
-                                    @member.Bio
-                                }
-                            </div>
-
-                            <div class="skill-section">
-
-                                <div class="skill-title">
-                                    Skill I Can Teach
+                                <div class="mp-group">
+                                    <h2 class="mp-group-title">Search</h2>
+                                    <div class="mp-search">
+                                        <svg class="mp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+                                        <input type="text" id="mpSearch" placeholder="Name, email or skill" autocomplete="off" />
+                                        <button type="button" id="mpClear" class="mp-clear" aria-label="Clear search">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <span class="skill-badge teach-skill">
-                                    @member.SkillToOffer
-                                </span>
-
-                            </div>
-
-                            <div class="skill-section">
-
-                                <div class="skill-title">
-                                    Skill I Want To Learn
+                                <div class="mp-group">
+                                    <h2 class="mp-group-title">Can teach</h2>
+                                    @if (offerOptions.Any())
+                                    {
+                                        foreach (var opt in offerOptions)
+                                        {
+                                            <button type="button" class="mp-opt" data-group="offer" data-value="@opt.Key.ToLower()" data-label="@opt.Key">
+                                                <span>@opt.Key</span><span class="n">@opt.Value</span>
+                                            </button>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <p class="mp-empty-opts">No skills listed yet.</p>
+                                    }
                                 </div>
 
-                                <span class="skill-badge learn-skill">
-                                    @member.SkillToLearn
-                                </span>
+                                <div class="mp-group">
+                                    <h2 class="mp-group-title">Wants to learn</h2>
+                                    @if (learnOptions.Any())
+                                    {
+                                        foreach (var opt in learnOptions)
+                                        {
+                                            <button type="button" class="mp-opt" data-group="learn" data-value="@opt.Key.ToLower()" data-label="@opt.Key">
+                                                <span>@opt.Key</span><span class="n">@opt.Value</span>
+                                            </button>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <p class="mp-empty-opts">No skills listed yet.</p>
+                                    }
+                                </div>
+
+                                <div class="mp-group">
+                                    <label class="mp-switch" for="mpReady">
+                                        <span>Swap ready only</span>
+                                        <span class="form-check form-switch m-0 p-0">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="mpReady" />
+                                        </span>
+                                    </label>
+                                </div>
 
                             </div>
-
-                            <div class="member-actions">
-
-                                <a asp-action="Details"
-                                   asp-route-id="@member.Id"
-                                   class="action-btn view-btn">
-                                    View
-                                </a>
-
-                                <a asp-action="Edit"
-                                   asp-route-id="@member.Id"
-                                   class="action-btn edit-btn">
-                                    Edit
-                                </a>
-
-                                <a asp-action="Delete"
-                                   asp-route-id="@member.Id"
-                                   class="action-btn delete-btn">
-                                    Delete
-                                </a>
-
-                            </div>
-
                         </div>
 
                     </div>
-                }
+                </aside>
+
+                <!-- RESULTS -->
+                <div class="col-lg-9">
+
+                    <div class="mp-bar">
+                        <p class="mp-info" id="mpInfo">Showing <b>@members.Count</b> of @members.Count members</p>
+
+                        <label class="mp-sort">
+                            Sort by
+                            <select id="mpSort">
+                                <option value="default">Default</option>
+                                <option value="az">Name A–Z</option>
+                                <option value="za">Name Z–A</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <div class="mp-active" id="mpActive"></div>
+
+                    <div class="row g-3" id="mpGrid">
+
+                        @for (var i = 0; i < members.Count; i++)
+                        {
+                            var member = members[i];
+                            var tone = tones[i % tones.Length];
+                            var hasOffer = !string.IsNullOrWhiteSpace(member.SkillToOffer);
+                            var hasLearn = !string.IsNullOrWhiteSpace(member.SkillToLearn);
+                            var swapReady = hasOffer && hasLearn;
+
+                            <div class="col-md-6 col-xxl-4 mp-item"
+                                 data-index="@i"
+                                 data-name="@((member.Name ?? "").ToLower())"
+                                 data-offer="@((member.SkillToOffer ?? "").ToLower())"
+                                 data-learn="@((member.SkillToLearn ?? "").ToLower())"
+                                 data-ready="@(swapReady ? "1" : "0")"
+                                 data-search="@($"{member.Name} {member.Email} {member.SkillToOffer} {member.SkillToLearn}".ToLower())">
+
+                                <article class="mc">
+
+                                    <div class="mc-top">
+
+                                        <div class="mc-avatar @tone">
+                                            @if (!string.IsNullOrWhiteSpace(member.Name))
+                                            {
+                                                @member.Name.Trim().Substring(0, 1).ToUpper()
+                                            }
+                                            else
+                                            {
+                                                <span>?</span>
+                                            }
+                                        </div>
+
+                                        <div class="mc-id">
+                                            <h3 class="mc-name">@member.Name</h3>
+                                            <p class="mc-mail">
+                                                <svg class="mp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>
+                                                <span>@member.Email</span>
+                                            </p>
+                                        </div>
+
+                                        <div class="dropdown">
+                                            <button class="mc-more" type="button"
+                                                    data-bs-toggle="dropdown" data-bs-strategy="fixed"
+                                                    aria-expanded="false" aria-label="More actions">
+                                                <svg class="mp-ico" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li><a class="dropdown-item" asp-action="Edit" asp-route-id="@member.Id">Edit</a></li>
+                                                <li><a class="dropdown-item danger" asp-action="Delete" asp-route-id="@member.Id">Delete</a></li>
+                                            </ul>
+                                        </div>
+
+                                    </div>
+
+                                    @if (string.IsNullOrWhiteSpace(member.Bio))
+                                    {
+                                        <p class="mc-bio empty">No introduction has been added yet.</p>
+                                    }
+                                    else
+                                    {
+                                        <p class="mc-bio">@member.Bio</p>
+                                    }
+
+                                    <dl class="mc-skills">
+                                        <div class="mc-skill">
+                                            <dt>Can teach</dt>
+                                            <dd>
+                                                @if (hasOffer)
+                                                {
+                                                    <span class="mc-tag teach" title="@member.SkillToOffer">@member.SkillToOffer</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="mc-tag none">Not specified</span>
+                                                }
+                                            </dd>
+                                        </div>
+                                        <div class="mc-skill">
+                                            <dt>Wants to learn</dt>
+                                            <dd>
+                                                @if (hasLearn)
+                                                {
+                                                    <span class="mc-tag learn" title="@member.SkillToLearn">@member.SkillToLearn</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="mc-tag none">Not specified</span>
+                                                }
+                                            </dd>
+                                        </div>
+                                    </dl>
+
+                                    <div class="mc-foot">
+
+                                        @if (swapReady)
+                                        {
+                                            <span class="mc-status ready">
+                                                <svg class="mp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h12l-3-3M17 17H5l3 3" /></svg>
+                                                <span>Swap ready</span>
+                                            </span>
+                                        }
+                                        else if (!string.IsNullOrWhiteSpace(member.PhoneNumber))
+                                        {
+                                            <span class="mc-status pending">
+                                                <svg class="mp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" /></svg>
+                                                <span>@member.PhoneNumber</span>
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="mc-status pending"><span>Profile incomplete</span></span>
+                                        }
+
+                                        <a asp-action="Details" asp-route-id="@member.Id" class="mc-view">View profile</a>
+
+                                    </div>
+
+                                </article>
+
+                            </div>
+                        }
+
+                    </div>
+
+                    <!-- NO RESULTS -->
+                    <div class="mp-none" id="mpNone">
+                        <div class="mp-empty-ico">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+                        </div>
+                        <h3>No matching members</h3>
+                        <p>Try another name, email or skill, or clear the filters to see everyone.</p>
+                        <button type="button" id="mpNoneReset">Clear all filters</button>
+                    </div>
+
+                </div>
 
             </div>
         }
         else
         {
-            <div class="empty-members">
-
-                <div class="empty-icon">
-                    👥
+            <div class="mp-empty">
+                <div class="mp-empty-ico">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5a6.5 6.5 0 0 1 3.5 5.5" /></svg>
                 </div>
-
-                <h3>
-                    No Members Yet
-                </h3>
-
+                <h2>Your community is waiting</h2>
                 <p>
-                    Start building the SkillSwap community by adding your first member.
+                    There are no members yet. Add the first member and start building
+                    the SkillSwap learning community.
                 </p>
-
-                <a asp-action="Create" class="add-member-btn">
-                    + Add First Member
+                <a asp-action="Create" class="mp-add">
+                    <svg class="mp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+                    Add First Member
                 </a>
-
             </div>
         }
 
     </div>
-
 </div>
-```
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            var grid = document.getElementById("mpGrid");
+            if (!grid) return;
+
+            var items = Array.prototype.slice.call(grid.querySelectorAll(".mp-item"));
+            var total = items.length;
+
+            var searchInput = document.getElementById("mpSearch");
+            var clearBtn = document.getElementById("mpClear");
+            var sortSelect = document.getElementById("mpSort");
+            var readyToggle = document.getElementById("mpReady");
+            var info = document.getElementById("mpInfo");
+            var none = document.getElementById("mpNone");
+            var noneReset = document.getElementById("mpNoneReset");
+            var activeBox = document.getElementById("mpActive");
+            var options = document.querySelectorAll(".mp-opt");
+
+            var state = { q: "", offer: "", learn: "", offerLabel: "", learnLabel: "", ready: false };
+
+            var closeIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+
+            function renderActive() {
+                activeBox.innerHTML = "";
+                var chips = [];
+
+                if (state.q) chips.push({ text: "Search: " + state.q, remove: function () { state.q = ""; searchInput.value = ""; } });
+                if (state.offer) chips.push({ text: "Teaches: " + state.offerLabel, remove: function () { setOption("offer", "", ""); } });
+                if (state.learn) chips.push({ text: "Learns: " + state.learnLabel, remove: function () { setOption("learn", "", ""); } });
+                if (state.ready) chips.push({ text: "Swap ready", remove: function () { state.ready = false; readyToggle.checked = false; } });
+
+                chips.forEach(function (c) {
+                    var b = document.createElement("button");
+                    b.type = "button";
+                    b.className = "mp-tag-active";
+                    b.innerHTML = "<span></span>" + closeIcon;
+                    b.firstChild.textContent = c.text;
+                    b.addEventListener("click", function () { c.remove(); apply(); });
+                    activeBox.appendChild(b);
+                });
+
+                if (chips.length > 1) {
+                    var all = document.createElement("button");
+                    all.type = "button";
+                    all.className = "mp-clear-all";
+                    all.textContent = "Clear all";
+                    all.addEventListener("click", resetAll);
+                    activeBox.appendChild(all);
+                }
+
+                activeBox.classList.toggle("show", chips.length > 0);
+            }
+
+            function apply() {
+                var visible = 0;
+
+                items.forEach(function (item) {
+                    var ok =
+                        (item.dataset.search || "").indexOf(state.q) !== -1 &&
+                        (!state.offer || (item.dataset.offer || "").indexOf(state.offer) !== -1) &&
+                        (!state.learn || (item.dataset.learn || "").indexOf(state.learn) !== -1) &&
+                        (!state.ready || item.dataset.ready === "1");
+
+                    item.style.display = ok ? "" : "none";
+                    if (ok) visible++;
+                });
+
+                info.innerHTML = "Showing <b>" + visible + "</b> of " + total + " members";
+                none.style.display = visible === 0 ? "block" : "none";
+                clearBtn.classList.toggle("show", state.q.length > 0);
+                renderActive();
+            }
+
+            function applySort() {
+                var mode = sortSelect.value;
+
+                items.sort(function (a, b) {
+                    if (mode === "az") return a.dataset.name.localeCompare(b.dataset.name);
+                    if (mode === "za") return b.dataset.name.localeCompare(a.dataset.name);
+                    return Number(a.dataset.index) - Number(b.dataset.index);
+                });
+
+                items.forEach(function (item) { grid.appendChild(item); });
+            }
+
+            function setOption(group, value, label) {
+                state[group] = value;
+                state[group + "Label"] = label;
+
+                options.forEach(function (o) {
+                    if (o.dataset.group === group) {
+                        o.classList.toggle("active", value !== "" && o.dataset.value === value);
+                    }
+                });
+            }
+
+            function resetAll() {
+                state.q = "";
+                state.ready = false;
+                searchInput.value = "";
+                readyToggle.checked = false;
+                setOption("offer", "", "");
+                setOption("learn", "", "");
+                apply();
+            }
+
+            searchInput.addEventListener("input", function () {
+                state.q = searchInput.value.toLowerCase().trim();
+                apply();
+            });
+
+            clearBtn.addEventListener("click", function () {
+                searchInput.value = "";
+                state.q = "";
+                searchInput.focus();
+                apply();
+            });
+
+            readyToggle.addEventListener("change", function () {
+                state.ready = readyToggle.checked;
+                apply();
+            });
+
+            sortSelect.addEventListener("change", applySort);
+
+            options.forEach(function (o) {
+                o.addEventListener("click", function () {
+                    var group = o.dataset.group;
+                    var already = o.classList.contains("active");
+                    setOption(group, already ? "" : o.dataset.value, already ? "" : o.dataset.label);
+                    apply();
+                });
+            });
+
+            noneReset.addEventListener("click", resetAll);
+        });
+    </script>
+}

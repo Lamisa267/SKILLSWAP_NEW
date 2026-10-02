@@ -2,156 +2,1679 @@
 
 @{
     ViewData["Title"] = "Member Profile";
+
+    var memberName = string.IsNullOrWhiteSpace(Model.Name)
+        ? "SkillSwap Member"
+        : Model.Name;
+
+    var firstLetter = !string.IsNullOrWhiteSpace(Model.Name)
+        ? Model.Name.Substring(0, 1).ToUpper()
+        : "?";
+
+    var hasUserAccount = Model.UserId.HasValue;
 }
 
-<div class="container py-5">
+<style>
 
-    ```
-    <div class="row justify-content-center">
-        <div class="col-lg-7">
+    :root {
+        --mp-primary: #287f70;
+        --mp-primary-dark: #1d6257;
+        --mp-primary-soft: #e8f5f1;
 
-            <div class="card border-0 shadow-sm rounded-4">
+        --mp-navy: #173f3b;
+        --mp-text: #405451;
+        --mp-muted: #82918e;
 
-                <div class="card-body p-4 p-md-5">
+        --mp-bg: #f5faf8;
+        --mp-card: #ffffff;
+        --mp-border: #e3ece9;
 
-                    <div class="text-center mb-4">
+        --mp-purple: #6670a8;
+        --mp-purple-soft: #f0f0fa;
 
-                        <div style="font-size:60px;">
-                            👤
-                        </div>
+        --mp-shadow: 0 12px 35px rgba(29, 76, 69, 0.07);
+    }
 
-                        <h1 class="fw-bold mt-2" style="color:#173f3b;">
-                            @Model.Name
-                        </h1>
 
-                        <p class="text-muted">
-                            SkillSwap Member Profile
-                        </p>
+    /* =========================================
+       PAGE
+       ========================================= */
 
+    .member-profile-page {
+        min-height: 100vh;
+        padding: 42px 0 85px;
+
+        background:
+            radial-gradient(
+                circle at 0% 0%,
+                rgba(40, 127, 112, 0.09),
+                transparent 30%
+            ),
+            radial-gradient(
+                circle at 100% 4%,
+                rgba(102, 112, 168, 0.07),
+                transparent 27%
+            ),
+            linear-gradient(
+                180deg,
+                #f8fcfb 0%,
+                #f4f9f7 100%
+            );
+    }
+
+
+    /* =========================================
+       TOP BACK LINK
+       ========================================= */
+
+    .profile-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+
+        margin-bottom: 17px;
+
+        color: #71817e;
+        text-decoration: none;
+
+        font-size: 12px;
+        font-weight: 700;
+
+        transition: all .2s ease;
+    }
+
+    .profile-back:hover {
+        color: var(--mp-primary);
+        transform: translateX(-3px);
+    }
+
+
+    /* =========================================
+       HERO
+       ========================================= */
+
+    .profile-hero {
+        position: relative;
+        overflow: hidden;
+
+        border-radius: 30px;
+
+        padding: 42px;
+
+        margin-bottom: 24px;
+
+        background:
+            linear-gradient(
+                135deg,
+                #163b38 0%,
+                #205d55 48%,
+                #287f70 100%
+            );
+
+        box-shadow:
+            0 25px 60px rgba(24, 59, 58, .18);
+    }
+
+
+    .profile-hero::before {
+        content: "";
+
+        position: absolute;
+
+        width: 390px;
+        height: 390px;
+
+        right: -150px;
+        top: -220px;
+
+        border-radius: 50%;
+
+        background: rgba(255,255,255,.055);
+    }
+
+
+    .profile-hero::after {
+        content: "";
+
+        position: absolute;
+
+        width: 260px;
+        height: 260px;
+
+        right: 160px;
+        bottom: -205px;
+
+        border-radius: 50%;
+
+        background: rgba(255,255,255,.035);
+    }
+
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+
+        display: flex;
+        align-items: center;
+
+        gap: 24px;
+    }
+
+
+    /* =========================================
+       AVATAR
+       ========================================= */
+
+    .profile-avatar {
+        width: 96px;
+        height: 96px;
+
+        flex-shrink: 0;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 28px;
+
+        background:
+            linear-gradient(
+                145deg,
+                rgba(255,255,255,.22),
+                rgba(255,255,255,.09)
+            );
+
+        border: 1px solid rgba(255,255,255,.2);
+
+        color: #ffffff;
+
+        font-size: 38px;
+        font-weight: 800;
+
+        box-shadow:
+            0 15px 35px rgba(0,0,0,.14),
+            inset 0 1px 0 rgba(255,255,255,.12);
+    }
+
+
+    /* =========================================
+       HERO TEXT
+       ========================================= */
+
+    .hero-text {
+        min-width: 0;
+    }
+
+
+    .profile-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+
+        margin-bottom: 9px;
+
+        color: #bce8de;
+
+        font-size: 10px;
+        font-weight: 800;
+
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+    }
+
+
+    .eyebrow-dot {
+        width: 7px;
+        height: 7px;
+
+        border-radius: 50%;
+
+        background: #78d8c0;
+
+        box-shadow:
+            0 0 0 4px rgba(120,216,192,.1);
+    }
+
+
+    .profile-name {
+        margin: 0 0 8px;
+
+        color: #ffffff;
+
+        font-size: 38px;
+        line-height: 1.12;
+
+        font-weight: 850;
+
+        letter-spacing: -1px;
+    }
+
+
+    .profile-subtitle {
+        margin: 0;
+
+        color: rgba(255,255,255,.72);
+
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+
+    /* =========================================
+       STATUS
+       ========================================= */
+
+    .profile-status {
+        margin-left: auto;
+
+        align-self: flex-start;
+
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+
+        padding: 8px 12px;
+
+        border-radius: 30px;
+
+        color: #dcf7ef;
+
+        background: rgba(255,255,255,.09);
+
+        border: 1px solid rgba(255,255,255,.13);
+
+        font-size: 9px;
+        font-weight: 800;
+
+        letter-spacing: .7px;
+        text-transform: uppercase;
+    }
+
+
+    .status-dot {
+        width: 7px;
+        height: 7px;
+
+        border-radius: 50%;
+
+        background: #72dfbd;
+    }
+
+
+    /* =========================================
+       MAIN GRID
+       ========================================= */
+
+    .profile-layout {
+        display: grid;
+
+        grid-template-columns:
+            minmax(0, 1.55fr)
+            minmax(290px, .85fr);
+
+        gap: 22px;
+
+        align-items: start;
+    }
+
+
+    .profile-column {
+        min-width: 0;
+    }
+
+
+    /* =========================================
+       CARD
+       ========================================= */
+
+    .profile-card {
+        background: var(--mp-card);
+
+        border: 1px solid var(--mp-border);
+
+        border-radius: 22px;
+
+        padding: 26px;
+
+        margin-bottom: 22px;
+
+        box-shadow: var(--mp-shadow);
+    }
+
+
+    .card-heading {
+        display: flex;
+        align-items: center;
+
+        gap: 11px;
+
+        margin-bottom: 19px;
+    }
+
+
+    .heading-icon {
+        width: 40px;
+        height: 40px;
+
+        flex-shrink: 0;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 12px;
+
+        background: var(--mp-primary-soft);
+
+        color: var(--mp-primary);
+
+        font-size: 17px;
+    }
+
+
+    .heading-text h2 {
+        margin: 0 0 2px;
+
+        color: var(--mp-navy);
+
+        font-size: 17px;
+        font-weight: 800;
+    }
+
+
+    .heading-text p {
+        margin: 0;
+
+        color: var(--mp-muted);
+
+        font-size: 10px;
+    }
+
+
+    /* =========================================
+       ABOUT
+       ========================================= */
+
+    .about-content {
+        padding: 19px;
+
+        border-radius: 15px;
+
+        background: #f8fbfa;
+
+        border: 1px solid #edf3f1;
+    }
+
+
+    .about-content p {
+        margin: 0;
+
+        color: var(--mp-text);
+
+        font-size: 13px;
+
+        line-height: 1.85;
+    }
+
+
+    .empty-description {
+        color: #9aa7a4 !important;
+        font-style: italic;
+    }
+
+
+    /* =========================================
+       CONTACT INFO
+       ========================================= */
+
+    .contact-list {
+        display: flex;
+        flex-direction: column;
+
+        gap: 11px;
+    }
+
+
+    .contact-item {
+        display: flex;
+        align-items: center;
+
+        gap: 13px;
+
+        padding: 13px;
+
+        border-radius: 14px;
+
+        background: #f8fbfa;
+
+        border: 1px solid #edf3f1;
+    }
+
+
+    .contact-icon {
+        width: 38px;
+        height: 38px;
+
+        flex-shrink: 0;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 11px;
+
+        background: #eaf6f2;
+
+        font-size: 15px;
+    }
+
+
+    .contact-details {
+        min-width: 0;
+    }
+
+
+    .contact-label {
+        display: block;
+
+        margin-bottom: 3px;
+
+        color: #8a9895;
+
+        font-size: 8px;
+
+        font-weight: 800;
+
+        letter-spacing: .8px;
+
+        text-transform: uppercase;
+    }
+
+
+    .contact-value {
+        display: block;
+
+        color: var(--mp-navy);
+
+        font-size: 12px;
+
+        font-weight: 700;
+
+        overflow-wrap: anywhere;
+    }
+
+
+    /* =========================================
+       SKILLS
+       ========================================= */
+
+    .skills-container {
+        display: grid;
+
+        grid-template-columns: 1fr 1fr;
+
+        gap: 15px;
+    }
+
+
+    .skill-panel {
+        position: relative;
+
+        overflow: hidden;
+
+        padding: 22px;
+
+        border-radius: 18px;
+
+        border: 1px solid;
+    }
+
+
+    .skill-panel::after {
+        content: "";
+
+        position: absolute;
+
+        width: 90px;
+        height: 90px;
+
+        right: -40px;
+        bottom: -45px;
+
+        border-radius: 50%;
+
+        background: rgba(255,255,255,.35);
+    }
+
+
+    .teach-panel {
+        background: #eaf7f3;
+        border-color: #d9eee8;
+    }
+
+
+    .learn-panel {
+        background: #f1f0fa;
+        border-color: #e6e3f2;
+    }
+
+
+    .skill-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 10px;
+
+        margin-bottom: 15px;
+    }
+
+
+    .skill-icon {
+        width: 42px;
+        height: 42px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 13px;
+
+        font-size: 18px;
+    }
+
+
+    .teach-panel .skill-icon {
+        background: #d5eee7;
+    }
+
+
+    .learn-panel .skill-icon {
+        background: #e3e0f2;
+    }
+
+
+    .skill-label {
+        color: #7c8d89;
+
+        font-size: 8px;
+
+        font-weight: 800;
+
+        letter-spacing: .9px;
+
+        text-transform: uppercase;
+    }
+
+
+    .skill-name {
+        position: relative;
+        z-index: 2;
+
+        margin: 0;
+
+        color: var(--mp-navy);
+
+        font-size: 18px;
+
+        font-weight: 800;
+
+        line-height: 1.4;
+
+        overflow-wrap: anywhere;
+    }
+
+
+    .skill-description {
+        position: relative;
+        z-index: 2;
+
+        margin: 7px 0 0;
+
+        color: #7d8d89;
+
+        font-size: 10px;
+
+        line-height: 1.55;
+    }
+
+
+    /* =========================================
+       MEMBERSHIP
+       ========================================= */
+
+    .membership-box {
+        display: flex;
+        align-items: center;
+
+        gap: 13px;
+
+        padding: 15px;
+
+        border-radius: 15px;
+
+        background: #f8fbfa;
+
+        border: 1px solid #edf3f1;
+    }
+
+
+    .membership-icon {
+        width: 42px;
+        height: 42px;
+
+        flex-shrink: 0;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 12px;
+
+        background: #eaf6f2;
+
+        font-size: 17px;
+    }
+
+
+    .membership-label {
+        display: block;
+
+        margin-bottom: 3px;
+
+        color: #899793;
+
+        font-size: 8px;
+
+        font-weight: 800;
+
+        letter-spacing: .8px;
+
+        text-transform: uppercase;
+    }
+
+
+    .membership-date {
+        display: block;
+
+        color: var(--mp-navy);
+
+        font-size: 13px;
+
+        font-weight: 750;
+    }
+
+
+    /* =========================================
+       RIGHT SIDE — CONNECT CARD
+       ========================================= */
+
+    .connect-card {
+        position: relative;
+
+        overflow: hidden;
+
+        padding: 27px;
+
+        border-radius: 22px;
+
+        background:
+            linear-gradient(
+                145deg,
+                #ffffff 0%,
+                #f4faf8 100%
+            );
+
+        border: 1px solid var(--mp-border);
+
+        box-shadow: var(--mp-shadow);
+
+        margin-bottom: 22px;
+    }
+
+
+    .connect-card::before {
+        content: "";
+
+        position: absolute;
+
+        width: 130px;
+        height: 130px;
+
+        right: -55px;
+        top: -55px;
+
+        border-radius: 50%;
+
+        background: rgba(40,127,112,.06);
+    }
+
+
+    .connect-icon {
+        width: 50px;
+        height: 50px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 15px;
+
+        background: var(--mp-primary-soft);
+
+        font-size: 21px;
+
+        margin-bottom: 17px;
+    }
+
+
+    .connect-title {
+        margin: 0 0 8px;
+
+        color: var(--mp-navy);
+
+        font-size: 19px;
+
+        font-weight: 800;
+    }
+
+
+    .connect-text {
+        margin: 0 0 21px;
+
+        color: var(--mp-muted);
+
+        font-size: 11px;
+
+        line-height: 1.7;
+    }
+
+
+    .request-button {
+        width: 100%;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        gap: 8px;
+
+        padding: 13px 17px;
+
+        border-radius: 11px;
+
+        background:
+            linear-gradient(
+                135deg,
+                #287f70,
+                #236e62
+            );
+
+        color: white;
+
+        text-decoration: none;
+
+        font-size: 12px;
+
+        font-weight: 800;
+
+        box-shadow:
+            0 9px 20px rgba(40,127,112,.18);
+
+        transition: all .25s ease;
+    }
+
+
+    .request-button:hover {
+        color: white;
+
+        transform: translateY(-2px);
+
+        box-shadow:
+            0 13px 27px rgba(40,127,112,.24);
+    }
+
+
+    .request-button-arrow {
+        font-size: 16px;
+
+        transition: transform .2s ease;
+    }
+
+
+    .request-button:hover .request-button-arrow {
+        transform: translateX(3px);
+    }
+
+
+    /* =========================================
+       NOT CONNECTED
+       ========================================= */
+
+    .not-connected {
+        padding: 15px;
+
+        border-radius: 13px;
+
+        background: #f1f8fc;
+
+        border: 1px solid #dcecf4;
+
+        color: #5a7481;
+
+        font-size: 11px;
+
+        line-height: 1.65;
+    }
+
+
+    .not-connected-title {
+        display: flex;
+        align-items: center;
+
+        gap: 7px;
+
+        margin-bottom: 5px;
+
+        color: #496b79;
+
+        font-size: 11px;
+
+        font-weight: 800;
+    }
+
+
+    /* =========================================
+       QUICK DETAILS
+       ========================================= */
+
+    .quick-card {
+        padding: 24px;
+
+        background: white;
+
+        border: 1px solid var(--mp-border);
+
+        border-radius: 22px;
+
+        box-shadow: var(--mp-shadow);
+
+        margin-bottom: 22px;
+    }
+
+
+    .quick-title {
+        margin: 0 0 15px;
+
+        color: var(--mp-navy);
+
+        font-size: 14px;
+
+        font-weight: 800;
+    }
+
+
+    .quick-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 15px;
+
+        padding: 11px 0;
+
+        border-bottom: 1px solid #edf2f0;
+    }
+
+
+    .quick-row:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+    }
+
+
+    .quick-row:first-of-type {
+        padding-top: 0;
+    }
+
+
+    .quick-label {
+        color: #899793;
+
+        font-size: 10px;
+
+        font-weight: 700;
+    }
+
+
+    .quick-value {
+        color: var(--mp-navy);
+
+        font-size: 11px;
+
+        font-weight: 800;
+
+        text-align: right;
+    }
+
+
+    /* =========================================
+       BOTTOM ACTIONS
+       ========================================= */
+
+    .bottom-actions {
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        gap: 12px;
+
+        padding: 22px 25px;
+
+        background: white;
+
+        border: 1px solid var(--mp-border);
+
+        border-radius: 20px;
+
+        box-shadow: var(--mp-shadow);
+    }
+
+
+    .bottom-message {
+        color: #81908d;
+
+        font-size: 11px;
+    }
+
+
+    .action-buttons {
+        display: flex;
+
+        gap: 8px;
+
+        flex-wrap: wrap;
+    }
+
+
+    .edit-button,
+    .back-button {
+        display: inline-flex;
+
+        align-items: center;
+        justify-content: center;
+
+        gap: 7px;
+
+        padding: 10px 15px;
+
+        border-radius: 9px;
+
+        text-decoration: none;
+
+        font-size: 11px;
+
+        font-weight: 800;
+
+        transition: all .2s ease;
+    }
+
+
+    .edit-button {
+        color: #59679b;
+        background: #f0f1f8;
+    }
+
+
+    .edit-button:hover {
+        color: #4d598a;
+
+        background: #e3e5f1;
+
+        transform: translateY(-1px);
+    }
+
+
+    .back-button {
+        color: #50615d;
+        background: #f2f6f5;
+    }
+
+
+    .back-button:hover {
+        color: #304945;
+
+        background: #e7edeb;
+
+        transform: translateY(-1px);
+    }
+
+
+    /* =========================================
+       RESPONSIVE
+       ========================================= */
+
+    @@media (max-width: 900px) {
+
+        .profile-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .profile-status {
+            display: none;
+        }
+
+    }
+
+
+    @@media (max-width: 700px) {
+
+        .member-profile-page {
+            padding: 28px 0 60px;
+        }
+
+        .profile-hero {
+            padding: 30px 25px;
+
+            border-radius: 23px;
+        }
+
+        .hero-content {
+            align-items: flex-start;
+        }
+
+        .profile-avatar {
+            width: 76px;
+            height: 76px;
+
+            border-radius: 22px;
+
+            font-size: 30px;
+        }
+
+        .profile-name {
+            font-size: 29px;
+        }
+
+        .skills-container {
+            grid-template-columns: 1fr;
+        }
+
+        .profile-card,
+        .connect-card,
+        .quick-card {
+            padding: 22px;
+        }
+
+        .bottom-actions {
+            align-items: stretch;
+
+            flex-direction: column;
+        }
+
+        .action-buttons {
+            width: 100%;
+        }
+
+        .edit-button,
+        .back-button {
+            flex: 1;
+        }
+
+    }
+
+
+    @@media (max-width: 480px) {
+
+        .profile-hero {
+            padding: 25px 21px;
+        }
+
+        .hero-content {
+            flex-direction: column;
+        }
+
+        .profile-name {
+            font-size: 26px;
+        }
+
+        .profile-subtitle {
+            font-size: 11px;
+        }
+
+        .profile-card,
+        .connect-card,
+        .quick-card {
+            border-radius: 18px;
+            padding: 19px;
+        }
+
+        .bottom-actions {
+            padding: 18px;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .edit-button,
+        .back-button {
+            width: 100%;
+            flex: none;
+        }
+
+    }
+
+</style>
+
+
+<div class="member-profile-page">
+
+    <div class="container">
+
+        <!-- BACK -->
+
+        <a asp-action="Index" class="profile-back">
+            ← Back to Members
+        </a>
+
+
+        <!-- HERO -->
+
+        <section class="profile-hero">
+
+            <div class="hero-content">
+
+                <div class="profile-avatar">
+                    @firstLetter
+                </div>
+
+
+                <div class="hero-text">
+
+                    <div class="profile-eyebrow">
+                        <span class="eyebrow-dot"></span>
+                        SkillSwap Community
                     </div>
 
-                    <div class="p-4 rounded-3 mb-4"
-                         style="background:#f7faf9;">
+                    <h1 class="profile-name">
+                        @memberName
+                    </h1>
 
-                        <h5 class="fw-bold mb-3" style="color:#173f3b;">
-                            About
-                        </h5>
+                    <p class="profile-subtitle">
+                        Member profile • Learn, share and grow together
+                    </p>
 
-                        <p class="text-muted mb-0">
-                            @(string.IsNullOrWhiteSpace(Model.Bio)
-                                ? "No bio provided."
-                                : Model.Bio)
-                        </p>
+                </div>
 
-                    </div>
 
-                    <div class="row g-3 mb-4">
-
-                        <div class="col-md-6">
-                            <div class="border rounded-3 p-3 h-100">
-
-                                <small class="text-muted">
-                                    Email
-                                </small>
-
-                                <div class="fw-semibold mt-1">
-                                    @Model.Email
-                                </div>
-
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="border rounded-3 p-3 h-100">
-
-                                <small class="text-muted">
-                                    Phone
-                                </small>
-
-                                <div class="fw-semibold mt-1">
-                                    @Model.PhoneNumber
-                                </div>
-
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div class="row g-3 mb-4">
-
-                        <div class="col-md-6">
-
-                            <div class="p-4 rounded-3 h-100"
-                                 style="background:#eaf6f2;">
-
-                                <small class="text-muted">
-                                    Skill I Can Teach
-                                </small>
-
-                                <h5 class="fw-bold mt-2"
-                                    style="color:#173f3b;">
-                                    @Model.SkillToOffer
-                                </h5>
-
-                            </div>
-
-                        </div>
-
-                        <div class="col-md-6">
-
-                            <div class="p-4 rounded-3 h-100"
-                                 style="background:#f3f0fa;">
-
-                                <small class="text-muted">
-                                    Skill I Want To Learn
-                                </small>
-
-                                <h5 class="fw-bold mt-2"
-                                    style="color:#173f3b;">
-                                    @Model.SkillToLearn
-                                </h5>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <div class="text-center text-muted mb-4">
-
-                        Joined:
-                        @Model.JoinedDate.ToLocalTime().ToString("dd MMMM yyyy")
-
-                    </div>
-
-                    <div class="d-flex justify-content-center gap-2">
-
-                        <a asp-action="Edit"
-                           asp-route-id="@Model.Id"
-                           class="btn px-4"
-                           style="background:#2b8a78;color:white;">
-                            Edit Profile
-                        </a>
-
-                        <a asp-action="Index"
-                           class="btn btn-light px-4">
-                            Back to Members
-                        </a>
-
-                    </div>
-
+                <div class="profile-status">
+                    <span class="status-dot"></span>
+                    Active Member
                 </div>
 
             </div>
 
+        </section>
+
+
+        <!-- MAIN CONTENT -->
+
+        <div class="profile-layout">
+
+
+            <!-- LEFT COLUMN -->
+
+            <div class="profile-column">
+
+
+                <!-- ABOUT -->
+
+                <section class="profile-card">
+
+                    <div class="card-heading">
+
+                        <div class="heading-icon">
+                            👋
+                        </div>
+
+                        <div class="heading-text">
+
+                            <h2>
+                                About @memberName
+                            </h2>
+
+                            <p>
+                                Get to know this community member
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="about-content">
+
+                        @if (string.IsNullOrWhiteSpace(Model.Bio))
+                        {
+                            <p class="empty-description">
+                                No introduction has been added yet.
+                            </p>
+                        }
+                        else
+                        {
+                            <p>
+                                @Model.Bio
+                            </p>
+                        }
+
+                    </div>
+
+                </section>
+
+
+                <!-- SKILLS -->
+
+                <section class="profile-card">
+
+                    <div class="card-heading">
+
+                        <div class="heading-icon">
+                            ✨
+                        </div>
+
+                        <div class="heading-text">
+
+                            <h2>
+                                Skills & Learning Goals
+                            </h2>
+
+                            <p>
+                                What this member can share and learn
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="skills-container">
+
+
+                        <!-- TEACH -->
+
+                        <div class="skill-panel teach-panel">
+
+                            <div class="skill-top">
+
+                                <div class="skill-icon">
+                                    🎓
+                                </div>
+
+                                <span class="skill-label">
+                                    Can Teach
+                                </span>
+
+                            </div>
+
+
+                            <h3 class="skill-name">
+
+                                @(string.IsNullOrWhiteSpace(Model.SkillToOffer)
+                                    ? "Not specified"
+                                    : Model.SkillToOffer)
+
+                            </h3>
+
+
+                            <p class="skill-description">
+                                A skill this member can share with others.
+                            </p>
+
+                        </div>
+
+
+                        <!-- LEARN -->
+
+                        <div class="skill-panel learn-panel">
+
+                            <div class="skill-top">
+
+                                <div class="skill-icon">
+                                    🎯
+                                </div>
+
+                                <span class="skill-label">
+                                    Wants To Learn
+                                </span>
+
+                            </div>
+
+
+                            <h3 class="skill-name">
+
+                                @(string.IsNullOrWhiteSpace(Model.SkillToLearn)
+                                    ? "Not specified"
+                                    : Model.SkillToLearn)
+
+                            </h3>
+
+
+                            <p class="skill-description">
+                                A skill this member wants to learn.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- CONTACT -->
+
+                <section class="profile-card">
+
+                    <div class="card-heading">
+
+                        <div class="heading-icon">
+                            ✦
+                        </div>
+
+                        <div class="heading-text">
+
+                            <h2>
+                                Contact Information
+                            </h2>
+
+                            <p>
+                                Member contact details
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="contact-list">
+
+
+                        <div class="contact-item">
+
+                            <div class="contact-icon">
+                                ✉️
+                            </div>
+
+                            <div class="contact-details">
+
+                                <span class="contact-label">
+                                    Email Address
+                                </span>
+
+                                <span class="contact-value">
+                                    @Model.Email
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="contact-item">
+
+                            <div class="contact-icon">
+                                ☎️
+                            </div>
+
+                            <div class="contact-details">
+
+                                <span class="contact-label">
+                                    Phone Number
+                                </span>
+
+                                <span class="contact-value">
+
+                                    @(string.IsNullOrWhiteSpace(Model.PhoneNumber)
+                                        ? "Not provided"
+                                        : Model.PhoneNumber)
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+                </section>
+
+
+                <!-- MEMBERSHIP -->
+
+                <section class="profile-card">
+
+                    <div class="card-heading">
+
+                        <div class="heading-icon">
+                            📅
+                        </div>
+
+                        <div class="heading-text">
+
+                            <h2>
+                                Membership
+                            </h2>
+
+                            <p>
+                                Community membership information
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="membership-box">
+
+                        <div class="membership-icon">
+                            🗓️
+                        </div>
+
+                        <div>
+
+                            <span class="membership-label">
+                                Joined SkillSwap
+                            </span>
+
+                            <span class="membership-date">
+                                @Model.JoinedDate.ToLocalTime().ToString("dd MMMM yyyy")
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+
+            <!-- RIGHT COLUMN -->
+
+            <aside class="profile-column">
+
+
+                <!-- CONNECT -->
+
+                <section class="connect-card">
+
+                    <div class="connect-icon">
+                        🔄
+                    </div>
+
+                    <h2 class="connect-title">
+                        Start a Skill Exchange
+                    </h2>
+
+                    <p class="connect-text">
+                        Interested in learning from @memberName?
+                        Send a request and exchange knowledge through SkillSwap.
+                    </p>
+
+
+                    @if (hasUserAccount)
+                    {
+                        <a asp-controller="SwapRequests"
+                           asp-action="Create"
+                           asp-route-receiverId="@Model.UserId.Value"
+                           class="request-button">
+
+                            <span>
+                                Request Skill Exchange
+                            </span>
+
+                            <span class="request-button-arrow">
+                                →
+                            </span>
+
+                        </a>
+                    }
+                    else
+                    {
+                        <div class="not-connected">
+
+                            <div class="not-connected-title">
+                                <span>ℹ️</span>
+                                Account not connected
+                            </div>
+
+                            This member does not have a connected user account yet,
+                            so a skill exchange request cannot be sent at this time.
+
+                        </div>
+                    }
+
+                </section>
+
+
+                <!-- QUICK DETAILS -->
+
+                <section class="quick-card">
+
+                    <h3 class="quick-title">
+                        Quick Details
+                    </h3>
+
+
+                    <div class="quick-row">
+
+                        <span class="quick-label">
+                            Member ID
+                        </span>
+
+                        <span class="quick-value">
+                            #@Model.Id
+                        </span>
+
+                    </div>
+
+
+                    <div class="quick-row">
+
+                        <span class="quick-label">
+                            Account Status
+                        </span>
+
+                        <span class="quick-value">
+                            @(hasUserAccount ? "Connected" : "Not Connected")
+                        </span>
+
+                    </div>
+
+
+                    <div class="quick-row">
+
+                        <span class="quick-label">
+                            Skill Offered
+                        </span>
+
+                        <span class="quick-value">
+
+                            @(string.IsNullOrWhiteSpace(Model.SkillToOffer)
+                                ? "Not specified"
+                                : Model.SkillToOffer)
+
+                        </span>
+
+                    </div>
+
+
+                    <div class="quick-row">
+
+                        <span class="quick-label">
+                            Learning Goal
+                        </span>
+
+                        <span class="quick-value">
+
+                            @(string.IsNullOrWhiteSpace(Model.SkillToLearn)
+                                ? "Not specified"
+                                : Model.SkillToLearn)
+
+                        </span>
+
+                    </div>
+
+                </section>
+
+            </aside>
+
         </div>
+
+
+        <!-- BOTTOM ACTIONS -->
+
+        <div class="bottom-actions">
+
+            <div class="bottom-message">
+                Want to update this member's information?
+            </div>
+
+
+            <div class="action-buttons">
+
+                <a asp-action="Edit"
+                   asp-route-id="@Model.Id"
+                   class="edit-button">
+
+                    ✎ Edit Profile
+
+                </a>
+
+
+                <a asp-action="Index"
+                   class="back-button">
+
+                    ← Back to Members
+
+                </a>
+
+            </div>
+
+        </div>
+
     </div>
-    ```
 
 </div>
 
+
 @section Scripts {
+
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
 }
